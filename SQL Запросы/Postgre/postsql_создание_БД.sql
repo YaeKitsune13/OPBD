@@ -1,4 +1,4 @@
-create database books_deals;
+-- create database books_deals;
 \c books_deals
 
 create table if not exists authors(
