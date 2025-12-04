@@ -1,0 +1,6 @@
+@OPBDFirstApi_HostAddress = http://localhost:5002
+
+GET {{OPBDFirstApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
