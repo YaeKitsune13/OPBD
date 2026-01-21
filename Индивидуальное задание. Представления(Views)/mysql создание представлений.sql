@@ -1,387 +1,248 @@
--- ============================================
--- СОЗДАНИЕ ПРЕДСТАВЛЕНИЙ
--- ============================================
+-- =====================================================
+-- ПРЕДСТАВЛЕНИЯ ДЛЯ БАЗЫ ДАННЫХ INSURANCE
+-- =====================================================
 
-CREATE VIEW v_policies_full AS
-SELECT
+-- 1. Представление "Кратковременное страхование"
+-- (с продолжительностью не более 2-х недель)
+CREATE OR REPLACE VIEW short_term_insurance AS
+SELECT 
     p.policy_number,
     p.full_name AS policyholder_name,
     p.passport,
-    p.birth_date,
-    TIMESTAMPDIFF(YEAR, p.birth_date, CURDATE()) AS age,
     it.name AS insurance_type,
-    it.description AS insurance_description,
-    e.full_name AS agent_name,
-    e.position AS agent_position,
     p.contract_date,
     p.end_date,
-    DATEDIFF(p.end_date, CURDATE()) AS days_until_expiration,
+    DATEDIFF(p.end_date, p.contract_date) AS duration_days,
     p.premium_amount,
-    p.policy_cost
+    p.policy_cost,
+    e.full_name AS employee_name
 FROM policyholders p
-JOIN insurance_types it ON p.insurance_type_id = it.insurance_type_id
-JOIN employees e ON p.employee_id = e.employee_id;
+JOIN insurance_types it ON it.insurance_type_id = p.insurance_type_id
+JOIN employees e ON e.employee_id = p.employee_id
+WHERE DATEDIFF(p.end_date, p.contract_date) <= 14
+ORDER BY p.contract_date DESC;
 
-CREATE VIEW v_claims_summary AS
-SELECT
+-- =====================================================
+
+-- 2. Представление "Доходы по видам страхования"
+CREATE OR REPLACE VIEW insurance_revenue_by_type AS
+SELECT 
+    it.name AS insurance_type,
+    YEAR(p.contract_date) AS year,
+    COUNT(DISTINCT p.policy_number) AS policy_count,
+    SUM(p.policy_cost) AS total_policy_cost,
+    COALESCE(SUM(c.payout), 0) AS total_payouts,
+    SUM(p.policy_cost) - COALESCE(SUM(c.payout), 0) AS revenue
+FROM insurance_types it
+LEFT JOIN policyholders p ON p.insurance_type_id = it.insurance_type_id
+LEFT JOIN claims c ON c.policy_number = p.policy_number
+WHERE p.policy_number IS NOT NULL
+GROUP BY it. insurance_type_id, it.name, YEAR(p.contract_date)
+ORDER BY year DESC, insurance_type;
+
+-- =====================================================
+
+-- 3. Представление "Страховые выплаты"
+CREATE OR REPLACE VIEW insurance_payouts AS
+SELECT 
     p.policy_number,
-    p.full_name AS policyholder_name,
     it.name AS insurance_type,
     p.premium_amount,
-    COUNT(c.claim_id) AS total_claims,
-    COALESCE(SUM(c. payout), 0) AS total_payout,
-    p. premium_amount - COALESCE(SUM(c.payout), 0) AS remaining_coverage
+    p.policy_cost,
+    COALESCE(SUM(c. payout), 0) AS total_payouts,
+    p.policy_cost - COALESCE(SUM(c.payout), 0) AS difference
 FROM policyholders p
-LEFT JOIN claims c ON p.policy_number = c.policy_number
-JOIN insurance_types it ON p.insurance_type_id = it.insurance_type_id
-GROUP BY p.policy_number, p.full_name, it.name, p.premium_amount;
+JOIN insurance_types it ON it. insurance_type_id = p. insurance_type_id
+LEFT JOIN claims c ON c.policy_number = p.policy_number
+GROUP BY 
+    p.policy_number, 
+    it.name, 
+    p.premium_amount, 
+    p.policy_cost
+ORDER BY p.policy_number;
 
-CREATE VIEW v_policy_violations AS
--- Полисы с превышением выплат
-SELECT
-    'Превышение выплат' AS violation_type,
-    p.policy_number,
-    p.full_name,
-    p.premium_amount,
-    SUM(c.payout) AS total_payout
-FROM policyholders p
-JOIN claims c ON p.policy_number = c.policy_number
-GROUP BY p.policy_number, p. full_name, p.premium_amount
-HAVING SUM(c.payout) > p.premium_amount
+-- =====================================================
+-- ПРИМЕРЫ ИСПОЛЬЗОВАНИЯ ПРЕДСТАВЛЕНИЙ
+-- =====================================================
 
-UNION ALL
+-- Проверка представления "Кратковременное страхование"
+SELECT * FROM short_term_insurance;
 
--- Полисы с ранними выплатами (до 6 дней)
-SELECT
-    'Выплата раньше 6 дней' AS violation_type,
-    p.policy_number,
-    p.full_name,
-    p.premium_amount,
-    c.payout
-FROM policyholders p
-JOIN claims c ON p.policy_number = c.policy_number
-WHERE c.event_date < DATE_ADD(p.contract_date, INTERVAL 6 DAY);
+-- Проверка представления "Доходы по видам страхования"
+SELECT * FROM insurance_revenue_by_type;
 
-CREATE VIEW v_employee_performance AS
-SELECT
-    e.employee_id,
-    e.full_name AS agent_name,
-    e.position,
-    COUNT(p.policy_number) AS total_policies,
-    SUM(p.premium_amount) AS total_premiums,
-    COUNT(CASE WHEN p.contract_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-               THEN 1 END) AS policies_last_30_days,
-    SUM(CASE WHEN p.contract_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-             THEN p.premium_amount ELSE 0 END) AS revenue_last_30_days
-FROM employees e
-LEFT JOIN policyholders p ON e.employee_id = p.employee_id
-GROUP BY e.employee_id, e.full_name, e.position;
+-- Проверка представления "Страховые выплаты"
+SELECT * FROM insurance_payouts;
 
-CREATE VIEW v_expiring_soon AS
-SELECT
-    policy_number,
-    full_name,
-    end_date,
-    DATEDIFF(end_date, CURDATE()) AS days_left
-FROM policyholders
-WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
-ORDER BY end_date;
+-- =====================================================
+-- ПРИМЕРЫ INSERT
+-- =====================================================
 
--- ============================================
--- ПРОСТОЕ ОБНОВЛЯЕМОЕ ПРЕДСТАВЛЕНИЕ
--- ============================================
+-- Пример 1: Добавление новых видов страхования
+INSERT INTO insurance_types (insurance_type_id, name, description, annual_cost) 
+VALUES
+    (4, 'здоровье', 'дмс и медицинское страхование', 25000.00),
+    (5, 'жизнь', 'страхование жизни', 30000.00),
+    (6, 'спорт', 'краткосрочное спортивное страхование', 5000.00);
 
--- Представление только для сотрудников (простое, обновляемое)
-CREATE VIEW v_employees_simple AS
-SELECT
-    employee_id,
-    full_name,
-    position,
-    phone,
-    email
-FROM employees;
+-- Пример 2: Добавление новых сотрудников
+INSERT INTO employees (employee_id, full_name, passport, position) 
+VALUES
+    (1005, 'Васильева Мария Ивановна', '4004 567890', 'агент'),
+    (1006, 'Козлов Дмитрий Андреевич', '4005 678901', 'старший агент'),
+    (1007, 'Морозова Елена Викторовна', '4006 789012', 'менеджер');
 
--- Представление только для держателей полисов (обновляемое)
-CREATE VIEW v_policyholders_simple AS
-SELECT
-    policy_number,
-    full_name,
-    passport,
-    birth_date,
-    phone,
-    email,
-    contract_date,
-    end_date,
-    premium_amount,
-    policy_cost,
-    insurance_type_id,
-    employee_id
-FROM policyholders;
+-- Пример 3: Добавление кратковременных полисов (для демонстрации представления 1)
+INSERT INTO policyholders (policy_number, passport, full_name, birth_date, insurance_type_id, employee_id, contract_date, end_date, premium_amount, policy_cost) 
+VALUES
+    -- Полис на 7 дней
+    ('PL00000009', '4500 999999', 'Туристов Олег', DATE '1987-04-10', 2, 1001, 
+     CURDATE(), DATE_ADD(CURDATE(), INTERVAL 7 DAY), 3000, 5000),
+    
+    -- Полис на 10 дней
+    ('PL00000010', '4501 111111', 'Спортсменова Анна', DATE '1994-08-22', 6, 1005, 
+     CURDATE(), DATE_ADD(CURDATE(), INTERVAL 10 DAY), 2500, 5000),
+    
+    -- Полис на 14 дней (ровно 2 недели)
+    ('PL00000011', '4501 222222', 'Путешественников Сергей', DATE '1990-11-30', 2, 1002, 
+     DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_ADD(CURDATE(), INTERVAL 12 DAY), 7000, 15000),
+    
+    -- Обычный долгосрочный полис для сравнения
+    ('PL00000012', '4501 333333', 'Надёжнов Пётр', DATE '1986-02-14', 4, 1006, 
+     CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 YEAR), 20000, 25000);
 
--- Представление для типов страхования
-CREATE VIEW v_insurance_types_simple AS
-SELECT
-    insurance_type_id,
-    name,
-    description
-FROM insurance_types;
+-- Пример 4: Добавление страховых случаев
+INSERT INTO claims (policy_number, description, event_date, payout) 
+VALUES
+    ('PL00000009', 'потеря багажа', DATE_ADD(CURDATE(), INTERVAL 4 DAY), 1500.00),
+    ('PL00000010', 'спортивная травма', DATE_ADD(CURDATE(), INTERVAL 7 DAY), 2000.00),
+    ('PL00000011', 'медицинская помощь за границей', DATE_ADD(CURDATE(), INTERVAL 5 DAY), 8000.00),
+    ('PL00000012', 'плановое лечение', DATE_ADD(CURDATE(), INTERVAL 30 DAY), 15000.00),
+    ('PL00000003', 'пожар на кухне', DATE_ADD(CURDATE(), INTERVAL 10 DAY), 18000.00);
 
--- ============================================
--- ИСПОЛЬЗОВАНИЕ:  SELECT
--- ============================================
+-- =====================================================
+-- ПРИМЕРЫ UPDATE
+-- =====================================================
 
--- Просто выбираем из представления
-SELECT * FROM v_policies_full
-WHERE days_until_expiration < 30
-ORDER BY days_until_expiration;
+-- Пример 1: Повышение сотрудников в должности
+UPDATE employees
+SET position = 'старший агент'
+WHERE employee_id = 1001 AND position = 'агент';
 
--- Найти полисы с превышением выплат
-SELECT * FROM v_claims_summary
-WHERE remaining_coverage < 0;
+UPDATE employees
+SET position = 'руководитель отдела'
+WHERE employee_id = 1003 AND position = 'старший агент';
 
--- Статистика по типам страхования
-SELECT
-    insurance_type,
-    COUNT(*) AS policies_count,
-    SUM(total_payout) AS total_paid
-FROM v_claims_summary
-GROUP BY insurance_type;
+-- Пример 2: Корректировка стоимости полисов
+UPDATE policyholders
+SET policy_cost = 12000,
+    premium_amount = 10000
+WHERE policy_number = 'PL00000009';
 
--- ============================================
--- ИСПОЛЬЗОВАНИЕ:  INSERT
--- ============================================
+-- Пример 3: Изменение годовой стоимости видов страхования
+UPDATE insurance_types
+SET annual_cost = 11000.00
+WHERE insurance_type_id = 1;
 
--- INSERT через простое представление (работает!)
-INSERT INTO v_employees_simple (full_name, position, phone, email)
-VALUES ('Петров Петр Петрович', 'Агент', '+7-900-123-45-67', 'petrov@insurance.com');
+UPDATE insurance_types
+SET annual_cost = 16000.00,
+    description = 'страхование выезжающих за рубеж и внутренние поездки'
+WHERE insurance_type_id = 2;
 
--- INSERT для типа страхования
-INSERT INTO v_insurance_types_simple (name, description)
-VALUES ('Страхование имущества', 'Защита от повреждения или утраты имущества');
+-- Пример 4: Продление срока действия полиса
+UPDATE policyholders
+SET end_date = DATE_ADD(end_date, INTERVAL 30 DAY)
+WHERE policy_number = 'PL00000010';
 
--- INSERT для держателя полиса
-INSERT INTO v_policyholders_simple (
-    policy_number,
-    full_name,
-    passport,
-    birth_date,
-    phone,
-    email,
-    contract_date,
-    end_date,
-    premium_amount,
-    policy_cost,
-    insurance_type_id,
-    employee_id
-)
-VALUES (
-    'POL-2026-00100',
-    'Сидоров Сидор Сидорович',
-    '4567 123456',
-    '1985-03-15',
-    '+7-900-555-11-22',
-    'sidorov@email.com',
-    '2026-01-20',
-    '2027-01-20',
-    50000.00,
-    55000.00,
-    1,
-    1
-);
-
--- ПРИМЕЧАНИЕ: INSERT НЕ работает для сложных представлений с JOIN или GROUP BY
--- Пример НЕРАБОТАЮЩЕГО INSERT:
--- INSERT INTO v_policies_full (...) VALUES (...);  -- ОШИБКА!
-
--- ============================================
--- ИСПОЛЬЗОВАНИЕ: UPDATE
--- ============================================
-
--- UPDATE через простое представление
-UPDATE v_employees_simple
-SET phone = '+7-900-999-88-77'
-WHERE employee_id = 1;
-
--- UPDATE для типа страхования
-UPDATE v_insurance_types_simple
-SET description = 'Комплексное медицинское страхование'
-WHERE name = 'Медицинское страхование';
-
--- UPDATE для держателя полиса
-UPDATE v_policyholders_simple
-SET premium_amount = 60000.00,
-    policy_cost = 66000.00
-WHERE policy_number = 'POL-2026-00100';
-
--- UPDATE с условием
-UPDATE v_policyholders_simple
-SET end_date = DATE_ADD(end_date, INTERVAL 1 YEAR)
-WHERE policy_number IN (
-    SELECT policy_number FROM v_expiring_soon
-    WHERE days_left < 10
-);
-
--- ПРИМЕЧАНИЕ: UPDATE НЕ работает для представлений с агрегацией
--- Пример НЕРАБОТАЮЩЕГО UPDATE:
--- UPDATE v_claims_summary SET total_claims = 5 WHERE policy_number = 'POL-001';  -- ОШИБКА!
-
--- ============================================
--- ИСПОЛЬЗОВАНИЕ: DELETE
--- ============================================
-
--- DELETE через простое представление
-DELETE FROM v_employees_simple
-WHERE employee_id = 999;
-
--- DELETE для типа страхования
-DELETE FROM v_insurance_types_simple
-WHERE insurance_type_id = 10;
-
--- DELETE для держателя полиса
-DELETE FROM v_policyholders_simple
-WHERE policy_number = 'POL-2026-00100';
-
--- DELETE с условием
-DELETE FROM v_policyholders_simple
-WHERE end_date < DATE_SUB(CURDATE(), INTERVAL 5 YEAR)
-  AND policy_number NOT IN (SELECT policy_number FROM claims);
-
--- DELETE устаревших полисов
-DELETE FROM v_policyholders_simple
-WHERE policy_number IN (
-    SELECT policy_number
-    FROM policyholders
-    WHERE end_date < '2020-01-01'
-);
-
--- ПРИМЕЧАНИЕ: DELETE НЕ работает для сложных представлений
--- Пример НЕРАБО��АЮЩЕГО DELETE:
--- DELETE FROM v_policies_full WHERE days_until_expiration < 0;  -- ОШИБКА!
-
--- ============================================
--- СОЗДАНИЕ ОБНОВЛЯЕМОГО ПРЕДСТАВЛЕНИЯ С ОГРАНИЧЕНИЯМИ
--- ============================================
-
--- WITH CHECK OPTION гарантирует, что вставленные/обновленные строки
--- будут удовлетворять условию представления
-
-CREATE VIEW v_active_policies AS
-SELECT
-    policy_number,
-    full_name,
-    passport,
-    contract_date,
-    end_date,
-    premium_amount,
-    insurance_type_id,
-    employee_id
-FROM policyholders
-WHERE end_date >= CURDATE()
-WITH CHECK OPTION;
-
--- Попытка вставить истекший полис вызовет ошибку:
--- INSERT INTO v_active_policies (policy_number, full_name, end_date, ...)
--- VALUES ('POL-OLD', 'Test User', '2020-01-01', ...);  -- ОШИБКА!
-
--- Это сработает:
-INSERT INTO v_active_policies (
-    policy_number,
-    full_name,
-    passport,
-    contract_date,
-    end_date,
-    premium_amount,
-    insurance_type_id,
-    employee_id
-)
-VALUES (
-    'POL-2026-00101',
-    'Новый Клиент',
-    '1234 567890',
-    CURDATE(),
-    DATE_ADD(CURDATE(), INTERVAL 1 YEAR),
-    75000.00,
-    1,
-    1
-);
-
--- ============================================
--- ПРЕДСТАВЛЕНИЕ ДЛЯ CLAIMS (обновляемое)
--- ============================================
-
-CREATE VIEW v_claims_simple AS
-SELECT
-    claim_id,
-    policy_number,
-    event_date,
-    event_description,
-    payout,
-    claim_date
-FROM claims;
-
--- INSERT нового страхового случая
-INSERT INTO v_claims_simple (policy_number, event_date, event_description, payout, claim_date)
-VALUES ('POL-001', '2026-01-15', 'ДТП на перекрестке', 25000.00, CURDATE());
-
--- UPDATE страхового случая
-UPDATE v_claims_simple
-SET payout = 30000.00
+-- Пример 5: Корректировка суммы выплаты по страховому случаю
+UPDATE claims
+SET payout = 3500.00,
+    description = 'дтп.  повреждение бампера (пересчёт после экспертизы)'
 WHERE claim_id = 1;
 
--- DELETE страхового случая
-DELETE FROM v_claims_simple
-WHERE claim_id = 100;
+-- Пример 6: Массовое обновление - увеличение всех премий на 5%
+UPDATE policyholders
+SET premium_amount = ROUND(premium_amount * 1.05, 0)
+WHERE insurance_type_id = 2;
 
--- ============================================
--- ПРОВЕРКА ОБНОВЛЯЕМОСТИ ПРЕДСТАВЛЕНИЯ
--- ============================================
+-- =====================================================
+-- ПРИМЕРЫ DELETE
+-- =====================================================
 
--- Список всех представлений в БД
-SELECT
-    TABLE_NAME,
-    IS_UPDATABLE,
-    CHECK_OPTION
-FROM INFORMATION_SCHEMA. VIEWS
-WHERE TABLE_SCHEMA = 'insurance';
+-- Пример 1: Удаление страхового случая (сначала удаляем зависимые записи)
+DELETE FROM claims
+WHERE claim_id = 5 AND policy_number = 'PL00000004';
 
--- Детальная информация о представлении
-SELECT
-    TABLE_NAME,
-    IS_UPDATABLE,
-    CHECK_OPTION,
-    DEFINER,
-    SECURITY_TYPE
-FROM INFORMATION_SCHEMA. VIEWS
-WHERE TABLE_SCHEMA = 'insurance'
-  AND TABLE_NAME = 'v_employees_simple';
+-- Пример 2: Удаление полиса (сначала нужно удалить связанные страховые случаи)
+-- Сначала удаляем все страховые случаи по полису
+DELETE FROM claims
+WHERE policy_number = 'PL00000010';
 
--- ============================================
--- УДАЛЕНИЕ ПРЕДСТАВЛЕНИЙ
--- ============================================
+-- Затем удаляем сам полис
+DELETE FROM policyholders
+WHERE policy_number = 'PL00000010';
 
--- Удалить одно представление
-DROP VIEW IF EXISTS v_employees_simple;
+-- Пример 3: Удаление сотрудника, у которого нет полисов
+DELETE FROM employees
+WHERE employee_id = 1007 
+  AND NOT EXISTS (
+      SELECT 1 FROM policyholders WHERE employee_id = 1007
+  );
 
--- Удалить несколько представлений
-DROP VIEW IF EXISTS
-    v_policies_full,
-    v_claims_summary,
-    v_policy_violations,
-    v_employee_performance,
-    v_expiring_soon,
-    v_employees_simple,
-    v_policyholders_simple,
-    v_insurance_types_simple,
-    v_active_policies,
-    v_claims_simple;
+-- Пример 4: Удаление вида страхования (сначала удалить все связанные данные)
+-- Проверяем, есть ли полисы по этому виду
+SELECT COUNT(*) FROM policyholders WHERE insurance_type_id = 6;
 
--- ============================================
--- ПРАВИЛА ОБНОВЛЯЕМОСТИ ПРЕДСТАВЛЕНИЙ В MySQL
--- ============================================
+-- Если есть, сначала удаляем страховые случаи
+DELETE FROM claims
+WHERE policy_number IN (
+    SELECT policy_number FROM policyholders WHERE insurance_type_id = 6
+);
 
-/*
-Представление ОБНОВЛЯЕМО (можно INSERT/UPDATE/DELETE), если оно:
+-- Затем удаляем полисы
+DELETE FROM policyholders
+WHERE insurance_type_id = 6;
 
-✅ МОЖНО обновлять:
-1. Содержит простой SELECT без JOIN
-2. Не содержит DISTINCT, GROUP BY, HAVING
+-- И наконец удаляем вид страхования
+DELETE FROM insurance_types
+WHERE insurance_type_id = 6;
+
+-- Пример 5: Массовое удаление - удаление старых страховых случаев (старше 2 лет)
+DELETE FROM claims
+WHERE event_date < DATE_SUB(CURDATE(), INTERVAL 2 YEAR);
+
+-- Пример 6: Удаление полисов с истёкшим сроком действия (старше 1 года от текущей даты)
+-- Сначала удаляем связанные страховые случаи
+DELETE FROM claims
+WHERE policy_number IN (
+    SELECT policy_number FROM policyholders 
+    WHERE end_date < DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+);
+
+-- Затем удаляем сами полисы
+DELETE FROM policyholders
+WHERE end_date < DATE_SUB(CURDATE(), INTERVAL 1 YEAR);
+
+-- =====================================================
+-- ПРОВЕРКА РЕЗУЛЬТАТОВ ПОСЛЕ ОПЕРАЦИЙ
+-- =====================================================
+
+-- Проверяем кратковременное страхование
+SELECT 'Кратковременное страхование: ' AS title;
+SELECT * FROM short_term_insurance;
+
+-- Проверяем доходы по видам страхования
+SELECT 'Доходы по видам страхования:' AS title;
+SELECT * FROM insurance_revenue_by_type;
+
+-- Проверяем страховые выплаты
+SELECT 'Страховые выплаты:' AS title;
+SELECT * FROM insurance_payouts;
+
+-- Общая статистика
+SELECT 'Общая статистика:' AS title;
+SELECT 
+    (SELECT COUNT(*) FROM insurance_types) AS total_insurance_types,
+    (SELECT COUNT(*) FROM employees) AS total_employees,
+    (SELECT COUNT(*) FROM policyholders) AS total_policies,
+    (SELECT COUNT(*) FROM claims) AS total_claims;
