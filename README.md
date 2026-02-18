@@ -4,20 +4,21 @@
 
 ## Выполненные разделы
 
-| Раздел                                        | Статус | Ссылка                                                                 |
-| :-------------------------------------------   | :----: | :--------------------------------------------------------------------- |
-| ПРО (По чемпионату)                           |   ✔️   | [тык](ПРО/%D0%9F%D1%80%D0%B5%D0%B4%D0%BC%D0%B5%D1%82%D0%BD%D0%B0%D1%8F%20%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C%20%D0%BF%D0%BE%20%D0%A1%D0%B5%D1%81%D1%81%D0%B8%D0%B9%201.pdf) |
-| ER-диаграммы (По чемпионату)                  |   ✔️   | [тык](ERДиаграммы/ER Crow Foot.png)                                   |
-| Спецификации (По чемпионату)                  |   ✔️   | [тык](Спецификация/Спецификация ПРО.pdf)                              |
-| Нормализация (вариант 22)                     |   ✔️   | [тык](Нормализация/Нормализация вариант 22.xlsx)                      |
-| MySQL (26–50)                                 |   ✔️   | [тык](SQL Запросы/sql запросы 26-50.sql)                              |
-| PostgreSQL (1–25)                             |   ✔️   | [тык](SQL Запросы/Postgre/запросы 1-25.sql)                           |
-| PostgreSQL (26–50)                            |   ✔️   | [тык](SQL Запросы/Postgre/запросы 26-50.sql)                          |
-| MySQL Индивидуальное задание (вариант 25)     |   ✔️   | [тык](Запросы По индивидуальному заданию/MySqlИндивидуальноеЗадание.sql) |
-| Postgres Индивидуальное задание (вариант 25)  |   ✔️   | [тык](Запросы По индивидуальному заданию/индивидуальное задание(postgres).sql) |
-| MySQL Детали                                  |   ✔️   | [тык](SQL Запросы/Запрос детали/sqlЗапрос.sql)                        |
-| PostgreSQL Детали                             |   ✔️   | [тык](SQL Запросы/Запрос детали/sqlЗапросПоРимским.sql)               |
+## Выполненные разделы
 
+| Раздел | Статус | Ссылка |
+| :--- | :---: | :--- |
+| ПРО (По чемпионату) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/%D0%9F%D0%A0%D0%9E/%D0%9F%D1%80%D0%B5%D0%B4%D0%BC%D0%B5%D1%82%D0%BD%D0%B0%D1%8F%20%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C%20%D0%BF%D0%BE%20%D0%A1%D0%B5%D1%81%D1%81%D0%B8%D0%B9%201.pdf) |
+| ER-диаграммы (По чемпионату) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/ER%D0%94%D0%B8%D0%B0%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D1%8B/ER%20Crow%20Foot.png) |
+| Спецификации (По чемпионату) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/%D0%A1%D0%BF%D0%B5%D1%86%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D1%8F/%D0%A1%D0%BF%D0%B5%D1%86%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D1%8F%20%D0%9F%D0%A0%D0%9E.pdf) |
+| Нормализация (вариант 22) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/%D0%9D%D0%BE%D1%80%D0%BC%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F/%D0%9D%D0%BE%D1%80%D0%BC%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F%20%D0%B2%D0%B0%D1%80%D0%B8%D0%B0%D0%BD%D1%82%2022.xlsx) |
+| MySQL (26–50) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/SQL%20%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B/sql%20%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B%2026-50.sql) |
+| PostgreSQL (1–25) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/SQL%20%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B/Postgre/%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B%201-25.sql) |
+| PostgreSQL (26–50) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/SQL%20%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B/Postgre/%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B%2026-50.sql) |
+| MySQL Индивидуальное задание (вариант 25) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B%20%D0%9F%D0%BE%20%D0%B8%D0%BD%D0%B4%D0%B8%D0%B2%D0%B8%D0%B4%D1%83%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%BC%D1%83%20%D0%B7%D0%B0%D0%B4%D0%B0%D0%BD%D0%B8%D1%8E/MySql%D0%98%D0%BD%D0%B4%D0%B8%D0%B2%D0%B8%D0%B4%D1%83%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5%D0%97%D0%B0%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5.sql) |
+| Postgres Индивидуальное задание (вариант 25) | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B%20%D0%9F%D0%BE%20%D0%B8%D0%BD%D0%B4%D0%B8%D0%B2%D0%B8%D0%B4%D1%83%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%BC%D1%83%20%D0%B7%D0%B0%D0%B4%D0%B0%D0%BD%D0%B8%D1%8E/%D0%B8%D0%BD%D0%B4%D0%B8%D0%B2%D0%B8%D0%B4%D1%83%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5%20%D0%B7%D0%B0%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5%28postgres%29.sql) |
+| MySQL Детали | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/SQL%20%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B/%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%20%D0%B4%D0%B5%D1%82%D0%B0%D0%BB%D0%B8/sql%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81.sql) |
+| PostgreSQL Детали | ✔️ | [открыть файл](https://github.com/YaeKitsune13/OPBD/blob/main/SQL%20%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D1%8B/%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%20%D0%B4%D0%B5%D1%82%D0%B0%D0%BB%D0%B8/sql%D0%97%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D0%9F%D0%BE%D0%A0%D0%B8%D0%BC%D1%81%D0%BA%D0%B8%D0%BC.sql) |
 ---
 
 ## Задание деталей
@@ -28,9 +29,10 @@
 
 Дополнительные материалы по заданиям с деталями:
 
-- [Тык — запросы по деталям (основной SQL)](SQL Запросы/Запрос детали/sqlЗапрос.sql)
-- [Тык — запросы по вариантам деталей](SQL Запросы/Запрос детали/sqlЗапросПоВариантам.sql)
-- [Тык — запросы по римским вариантам](SQL Запросы/Запрос детали/sqlЗапросПоРимским.sql)
+## Индивидуальное задание
+
+- [Тригеры по индивидуальному заданию (папка)](https://github.com/YaeKitsune13/OPBD/tree/main/%D0%A2%D1%80%D0%B8%D0%B3%D0%B5%D1%80%D1%8B%20%D0%BF%D0%BE%20%D0%B8%D0%BD%D0%B4%D0%B8%D0%B2%D0%B8%D0%B4%D1%83%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%BC%D1%83%20%D0%B7%D0%B0%D0%B4%D0%B0%D0%BD%D0%B8%D1%8E)
+- [Индивидуальное задание. Представления (Views) (папка)](https://github.com/YaeKitsune13/OPBD/tree/main/%D0%98%D0%BD%D0%B4%D0%B8%D0%B2%D0%B8%D0%B4%D1%83%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5%20%D0%B7%D0%B0%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5.%20%D0%9F%D1%80%D0%B5%D0%B4%D1%81%D1%82%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F(Views))
 
 ---
 
