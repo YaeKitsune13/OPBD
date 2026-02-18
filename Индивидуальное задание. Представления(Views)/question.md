@@ -10,6 +10,7 @@
 ---
 
 ## Оглавление
+
 1. [Описание базы данных](#описание-базы-данных)
 2. [Представление 1: Кратковременное страхование](#представление-1-кратковременное-страхование)
 3. [Представление 2: Доходы по видам страхования](#представление-2-доходы-по-видам-страхования)
@@ -22,16 +23,17 @@
 
 ## Описание базы данных
 
-База данных **insurance** содержит информацию о страховой компании и включает следующие таблицы: 
+База данных **insurance** содержит информацию о страховой компании и включает следующие таблицы:
 
-| Таблица | Описание |
-|---------|----------|
+| Таблица             | Описание                                        |
+| ------------------- | ----------------------------------------------- |
 | **insurance_types** | Виды страхования (авто, путешествия, имущество) |
-| **employees** | Сотрудники страховой компании |
-| **policyholders** | Страхователи и их полисы |
-| **claims** | Страховые случаи и выплаты |
+| **employees**       | Сотрудники страховой компании                   |
+| **policyholders**   | Страхователи и их полисы                        |
+| **claims**          | Страховые случаи и выплаты                      |
 
 ### Структура связей:
+
 ```
 insurance_types ──┐
                   ├──> policyholders ──> claims
@@ -50,7 +52,7 @@ employees ────────┘
 
 ```sql
 CREATE OR REPLACE VIEW short_term_insurance AS
-SELECT 
+SELECT
     p.policy_number,
     p.full_name AS policyholder_name,
     p.passport,
@@ -73,21 +75,21 @@ ORDER BY p.contract_date DESC;
 
 ### Описание полей представления
 
-| Поле | Описание |
-|------|----------|
-| `policy_number` | Номер страхового полиса (PRIMARY KEY) |
-| `policyholder_name` | ФИО страхова��еля |
-| `passport` | Паспортные данные |
-| `insurance_type` | Вид страхования |
-| `insurance_type_id` | ID вида страхования |
-| `contract_date` | Дата заключения договора |
-| `end_date` | Дата окончания действия полиса |
-| `duration_days` | **Продолжительность в днях** (≤ 14) |
-| `premium_amount` | Сумма страховой премии |
-| `policy_cost` | Стоимость полиса |
-| `employee_id` | ID сотрудника |
-| `employee_name` | ФИО сотрудника, офо��мившего полис |
-| `birth_date` | Дата рождения страхователя |
+| Поле                | Описание                              |
+| ------------------- | ------------------------------------- |
+| `policy_number`     | Номер страхового полиса (PRIMARY KEY) |
+| `policyholder_name` | ФИО страхова��еля                     |
+| `passport`          | Паспортные данные                     |
+| `insurance_type`    | Вид страхования                       |
+| `insurance_type_id` | ID вида страхования                   |
+| `contract_date`     | Дата заключения договора              |
+| `end_date`          | Дата окончания действия полиса        |
+| `duration_days`     | **Продолжительность в днях** (≤ 14)   |
+| `premium_amount`    | Сумма страховой премии                |
+| `policy_cost`       | Стоимость полиса                      |
+| `employee_id`       | ID сотрудника                         |
+| `employee_name`     | ФИО сотрудника, офо��мившего полис    |
+| `birth_date`        | Дата рождения страхователя            |
 
 ### Пример использования представления
 
@@ -101,6 +103,7 @@ SELECT * FROM short_term_insurance;
 ![Кратковременное страхование](Изображения/short_term_insurance_view.png)
 
 **Объяснение:**
+
 - В представлении отображаются только полисы, у которых `duration_days ≤ 14`
 - Например, полис на 7 дней для туристической поездки
 - Автоматически фильтруются записи при добавлении новых пол��сов
@@ -117,7 +120,7 @@ SELECT * FROM short_term_insurance;
 
 ```sql
 CREATE OR REPLACE VIEW insurance_revenue_by_type AS
-SELECT 
+SELECT
     it.insurance_type_id,
     it.name AS insurance_type,
     YEAR(p.contract_date) AS year,
@@ -135,15 +138,15 @@ ORDER BY year DESC, insurance_type;
 
 ### Описание полей представления
 
-| Поле | Описание | Формула |
-|------|----------|---------|
-| `insurance_type_id` | ID вида страхования | - |
-| `insurance_type` | Вид страхования | - |
-| `year` | Год заключения договоров | `YEAR(contract_date)` |
-| `policy_count` | Количество полисов | `COUNT(DISTINCT policy_number)` |
-| `total_policy_cost` | Суммарная стоимость полисов | `SUM(policy_cost)` |
-| `total_payouts` | Сумма страховых выплат | `SUM(payout)` |
-| `revenue` | **Доход компании** | `total_policy_cost - total_payouts` |
+| Поле                | Описание                    | Формула                             |
+| ------------------- | --------------------------- | ----------------------------------- |
+| `insurance_type_id` | ID вида страхования         | -                                   |
+| `insurance_type`    | Вид страхования             | -                                   |
+| `year`              | Год заключения договоров    | `YEAR(contract_date)`               |
+| `policy_count`      | Количество полисов          | `COUNT(DISTINCT policy_number)`     |
+| `total_policy_cost` | Суммарная стоимость полисов | `SUM(policy_cost)`                  |
+| `total_payouts`     | Сумма страховых выплат      | `SUM(payout)`                       |
+| `revenue`           | **Доход компании**          | `total_policy_cost - total_payouts` |
 
 ### Пример использования представления
 
@@ -163,7 +166,7 @@ ORDER BY revenue DESC;
 
 ![Доходы по видам страхования](Изображения/revenue_view.png)
 
-**Примечание:** Данное представление использует агрегатные функции и GROUP BY, поэтому **не поддерживает прямые операции INSERT/UPDATE/DELETE**. 
+**Примечание:** Данное представление использует агрегатные функции и GROUP BY, поэтому **не поддерживает прямые операции INSERT/UPDATE/DELETE**.
 
 ---
 
@@ -177,7 +180,7 @@ ORDER BY revenue DESC;
 
 ```sql
 CREATE OR REPLACE VIEW insurance_payouts AS
-SELECT 
+SELECT
     p.policy_number,
     it.name AS insurance_type,
     it.insurance_type_id,
@@ -188,26 +191,26 @@ SELECT
 FROM policyholders p
 JOIN insurance_types it ON it.insurance_type_id = p.insurance_type_id
 LEFT JOIN claims c ON c.policy_number = p.policy_number
-GROUP BY 
-    p.policy_number, 
+GROUP BY
+    p.policy_number,
     it.name,
     it.insurance_type_id,
-    p.premium_amount, 
+    p.premium_amount,
     p.policy_cost
 ORDER BY p.policy_number;
 ```
 
 ### Описание полей представления
 
-| Поле | Описание |
-|------|----------|
-| `policy_number` | Номер страхового полиса |
-| `insurance_type` | Вид страхования |
-| `insurance_type_id` | ID вида страхования |
-| `premium_amount` | Сумма страховой премии |
-| `policy_cost` | Стоимость полиса |
-| `total_payouts` | Сумма страховых выплат |
-| `difference` | **Остаток покрытия** (`policy_cost - total_payouts`) |
+| Поле                | Описание                                             |
+| ------------------- | ---------------------------------------------------- |
+| `policy_number`     | Номер страхового полиса                              |
+| `insurance_type`    | Вид страхования                                      |
+| `insurance_type_id` | ID вида страхования                                  |
+| `premium_amount`    | Сумма страховой премии                               |
+| `policy_cost`       | Стоимость полиса                                     |
+| `total_payouts`     | Сумма страховых выплат                               |
+| `difference`        | **Остаток покрытия** (`policy_cost - total_payouts`) |
 
 ### Пример использования представления
 
@@ -237,18 +240,18 @@ ORDER BY difference;
 
 ### Важно: Ограничения для INSERT через VIEW
 
-| Представление | Можно ли INSERT?  | Причина |
-|---------------|------------------|---------|
-| `short_term_insurance` | ❌ НЕТ | Содержит JOIN нескольких таблиц |
-| `insurance_revenue_by_type` | ❌ НЕТ | Содержит GROUP BY и агрегацию |
-| `insurance_payouts` | ❌ НЕТ | Содержит GROUP BY и агрегацию |
+| Представление               | Можно ли INSERT? | Причина                         |
+| --------------------------- | ---------------- | ------------------------------- |
+| `short_term_insurance`      | ❌ НЕТ           | Содержит JOIN нескольких таблиц |
+| `insurance_revenue_by_type` | ❌ НЕТ           | Содержит GROUP BY и агрегацию   |
+| `insurance_payouts`         | ❌ НЕТ           | Содержит GROUP BY и агрегацию   |
 
 ### Создадим дополнительное UPDATABLE представление для демонстрации INSERT
 
 ```sql
 -- Простое представление на основе одной таблицы (UPDATABLE)
 CREATE OR REPLACE VIEW v_policyholders_simple AS
-SELECT 
+SELECT
     policy_number,
     passport,
     full_name,
@@ -266,10 +269,10 @@ FROM policyholders;
 
 ```sql
 -- Добавление нового полиса через представление
-INSERT INTO v_policyholders_simple 
-    (policy_number, passport, full_name, birth_date, insurance_type_id, 
+INSERT INTO v_policyholders_simple
+    (policy_number, passport, full_name, birth_date, insurance_type_id,
      employee_id, contract_date, end_date, premium_amount, policy_cost)
-VALUES 
+VALUES
     ('PL00000015', '4502 888888', 'Новиков Андрей', DATE '1992-06-15', 2, 1001,
      CURDATE(), DATE_ADD(CURDATE(), INTERVAL 10 DAY), 4000, 6000);
 ```
@@ -287,10 +290,10 @@ SELECT * FROM policyholders WHERE policy_number = 'PL00000015';
 ![INSERT через представление](Изображения/insert_view.png)
 
 **Объяснение:**
+
 - INSERT выполнен **через представление** `v_policyholders_simple`
 - Данные автоматически добавились в базовую таблицу `policyholders`
 - Если полис имеет срок ≤ 14 дней, он появится в `short_term_insurance`
-
 
 ## Операции UPDATE через представления
 
@@ -299,7 +302,7 @@ SELECT * FROM policyholders WHERE policy_number = 'PL00000015';
 ```sql
 -- Представление для кратковременного страхования без JOIN
 CREATE OR REPLACE VIEW v_short_policies AS
-SELECT 
+SELECT
     policy_number,
     full_name,
     passport,
@@ -337,6 +340,7 @@ SELECT * FROM policyholders WHERE policy_number = 'PL00000015';
 ![UPDATE через представление](Изображения/update_view.png)
 
 **Объяснение:**
+
 - UPDATE выполнен **через представление** `v_short_policies`
 - Изменения автоматически применились к базовой таблице `policyholders`
 - Вычисляемое поле `duration_days` **нельзя обновить** (оно рассчитывается автоматически)
@@ -356,7 +360,7 @@ WHERE policy_number = 'PL000000015';
 **Важно:** Сначала нужно удалить связанные страховые случаи!
 
 ```sql
--- Правильный порядок удаления: 
+-- Правильный порядок удаления:
 
 -- Шаг 1: Удаляем страховые случаи
 DELETE FROM claims
@@ -384,16 +388,17 @@ SELECT * FROM policyholders WHERE policy_number = 'PL000000015';
 ---
 
 ## Проверка обновляемости представлений
+
 ---
 
 ## Итоговая таблица возможностей представлений
 
-| Представление | Основа | GROUP BY | JOIN | INSERT | UPDATE | DELETE |
-|---------------|--------|----------|------|--------|--------|--------|
-| `short_term_insurance` | Несколько таблиц | ❌ | ✅ | ❌ | ❌ | ❌ |
-| `insurance_revenue_by_type` | Несколько таблиц | ✅ | ✅ | ❌ | ❌ | ❌ |
-| `insurance_payouts` | Несколько таблиц | ✅ | ✅ | ❌ | ❌ | ❌ |
-| `v_policyholders_simple` | Одна таблица | ❌ | ❌ | ✅ | ✅ | ✅ |
-| `v_short_policies` | Одна таблица | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Представление               | Основа           | GROUP BY | JOIN | INSERT | UPDATE | DELETE |
+| --------------------------- | ---------------- | -------- | ---- | ------ | ------ | ------ |
+| `short_term_insurance`      | Несколько таблиц | ❌       | ✅   | ❌     | ❌     | ❌     |
+| `insurance_revenue_by_type` | Несколько таблиц | ✅       | ✅   | ❌     | ❌     | ❌     |
+| `insurance_payouts`         | Несколько таблиц | ✅       | ✅   | ❌     | ❌     | ❌     |
+| `v_policyholders_simple`    | Одна таблица     | ❌       | ❌   | ✅     | ✅     | ✅     |
+| `v_short_policies`          | Одна таблица     | ❌       | ❌   | ✅     | ✅     | ✅     |
 
 ---
