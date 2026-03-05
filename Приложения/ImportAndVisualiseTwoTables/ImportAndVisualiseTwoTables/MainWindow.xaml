@@ -7,7 +7,8 @@
         mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowState="Maximized"
         Title="MainWindow" Height="600" Width="800">
     <StackPanel>
-        <Label FontSize="20" FontFamily="Bahnschrift">2: Таблица выделяет Claims Policyholders и выводит случившиеся проешествия</Label>
+        <Label FontSize="30" FontFamily="Bahnschrift">MySQL</Label>
+        <Label FontSize="20" FontFamily="Bahnschrift">1: Таблица выделяет Рабочих с помощью sql запроса</Label>
         <DataGrid x:Name="EmployeesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" FontSize="20"
                   FontFamily="Times new Roman">
             <DataGrid.Columns>
@@ -32,5 +33,7 @@
                 <DataGridTextColumn Header="Выплаченные средства" Binding="{Binding Payout}" />
             </DataGrid.Columns>
         </DataGrid>
+        <Label FontSize="30" FontFamily="Bahnschrift">Posgress SQL</Label>
+        
     </StackPanel>
 </Window>

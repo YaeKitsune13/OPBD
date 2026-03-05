@@ -22,7 +22,10 @@ public partial class MainWindow : Window
 
     private void LoadEmployeesDataGrid()
     {
-        var dbEmployees = dbContext.Employees.ToList();
+        var dbEmployees = dbContext.Employees
+            .FromSqlRaw("SELECT * FROM employees")
+            .ToList();
+    
         EmployeesDataGrid.ItemsSource = dbEmployees;
     }
 
