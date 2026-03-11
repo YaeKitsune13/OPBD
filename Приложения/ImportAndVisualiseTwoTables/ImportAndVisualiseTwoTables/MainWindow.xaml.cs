@@ -12,7 +12,7 @@ public partial class MainWindow : Window
 {
     private readonly InsuranceContext dbContext;
     private readonly ModelsPostgresSQL.InsuranceContext dbContext2;
-    private List<int> employeeIds;
+    private List<int> employeeIds = new List<int>();
     public MainWindow()
     {
         InitializeComponent();
