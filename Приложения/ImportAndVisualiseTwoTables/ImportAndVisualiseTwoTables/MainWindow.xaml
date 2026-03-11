@@ -50,6 +50,37 @@
                                 <DataGridTextColumn Binding="{Binding Payout}" Header="Выплаченные средства" />
                         </DataGrid.Columns>
                 </DataGrid>
-                
+                <Label FontFamily="Bahnschrift" FontSize="30">PostgreSQL</Label>
+                <Label FontFamily="Bahnschrift" FontSize="20">1: Таблица выделяет Рабочих с помощью sql запроса</Label>
+                <DataGrid
+                        x:Name="EmployeesPostgreDataGrid"
+                        AutoGenerateColumns="False"
+                        FontSize="20"
+                        IsReadOnly="True">
+                        <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding EmployeeId}" Header="ID" />
+                                <DataGridTextColumn Binding="{Binding FullName}" Header="FullName" />
+                                <DataGridTextColumn Binding="{Binding Passport}" Header="Паспорт" />
+                                <DataGridTextColumn Binding="{Binding Position}" Header="Должность" />
+                                <DataGridTextColumn Binding="{Binding CountPolicyholders}" Header="Количество застрохованных людей" />
+                        </DataGrid.Columns>
+                </DataGrid>
+                <Label FontFamily="Bahnschrift" FontSize="20">2: Таблица выделяет Claims Policyholders и выводит случившиеся проешествия</Label>
+                <DataGrid
+                        x:Name="ClaimsPostgreIncludedDataGrid"
+                        AutoGenerateColumns="False"
+                        FontSize="20"
+                        IsReadOnly="True">
+                        <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding ClaimId}" Header="ID" />
+                                <DataGridTextColumn Binding="{Binding PolicyNumberNavigation.PolicyNumber}" Header="ID Потерпевшего" />
+                                <DataGridTextColumn Binding="{Binding Description}" Header="Описание" />
+                                <DataGridTextColumn Binding="{Binding PolicyNumberNavigation.FullName}" Header="ФИО" />
+                                <DataGridTextColumn Binding="{Binding PolicyNumberNavigation.BirthDate}" Header="День Рождения" />
+                                <DataGridTextColumn Binding="{Binding PolicyNumberNavigation.Passport}" Header="Паспорт" />
+                                <DataGridTextColumn Binding="{Binding EventDate}" Header="Дата проешествия" />
+                                <DataGridTextColumn Binding="{Binding Payout}" Header="Выплаченные средства" />
+                        </DataGrid.Columns>
+                </DataGrid>
         </StackPanel>
 </Window>

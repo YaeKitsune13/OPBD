@@ -1,61 +1,58 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using ImportAndVisualiseTwoTables.Models;
-using Microsoft.EntityFrameworkCore;
 using ImportAndVisualiseTwoTables.ModelsPostgresSQL;
+using Microsoft.EntityFrameworkCore;
 
 namespace ImportAndVisualiseTwoTables;
 
-/// <summary>
-///     Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     private readonly Models.InsuranceContext dbContext;
     private readonly ModelsPostgresSQL.InsuranceContext dbContext2;
-    private List<int> employeeIds = new List<int>();
+
     public MainWindow()
     {
         InitializeComponent();
         dbContext = new Models.InsuranceContext();
         dbContext2 = new ModelsPostgresSQL.InsuranceContext();
-        LoadEmployeesDataGrid();
-        LoadClaimsDataGrid();
-        // LoadEmployersComboBox();
-        // LoadPolicyHoldersDataGrid();
-        // LoadInsuranceTypes();
-        // LoadInsuranceClaimsByType();
+        LoadEmployeesDataGridMySQL();
+        LoadEmployeesDataGridPostgreSQL();
     }
 
-    private void LoadEmployeesDataGrid()
+    private void LoadEmployeesDataGridMySQL()
     {
-        var dbEmployees = dbContext.Employees
+        EmployeesDataGrid.ItemsSource = dbContext.Employees
             .FromSqlRaw("SELECT * FROM employees")
             .ToList();
-
-        EmployeesDataGrid.ItemsSource = dbEmployees;
         EmployeesDataGrid.SelectionChanged += EmployeesDataGrid_SelectionChanged;
+    }
+
+    private void LoadEmployeesDataGridPostgreSQL()
+    {
+        EmployeesPostgreDataGrid.ItemsSource = dbContext2.Employees
+            .FromSqlRaw("SELECT * FROM employees")
+            .ToList();
+        EmployeesPostgreDataGrid.SelectionChanged += EmployeesPostgreDataGrid_SelectionChanged;
     }
 
     private void EmployeesDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (EmployeesDataGrid.SelectedItem is Models.Employees selectedEmployee)
-        {
             ClaimsIncludedDataGrid.ItemsSource = dbContext.Claims
                 .Include(c => c.PolicyNumberNavigation)
                 .Where(c => c.PolicyNumberNavigation!.EmployeeId == selectedEmployee.EmployeeId)
                 .AsNoTracking()
                 .ToList();
-        }
     }
 
-    private void LoadClaimsDataGrid()
+    private void EmployeesPostgreDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ClaimsIncludedDataGrid.ItemsSource = dbContext.Claims
-            .Include(c => c.PolicyNumberNavigation)
-            .AsNoTracking()
-            .ToList();
+        if (EmployeesPostgreDataGrid.SelectedItem is ModelsPostgresSQL.Employee selectedEmployee)
+            ClaimsPostgreIncludedDataGrid.ItemsSource = dbContext2.Claims
+                .Include(c => c.PolicyNumberNavigation)
+                .Where(c => c.PolicyNumberNavigation!.EmployeeId == selectedEmployee.EmployeeId)
+                .AsNoTracking()
+                .ToList();
     }
-
-   
 }
