@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:ImportAndVisualiseTwoTables"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        Title="MainWindow"
+        Title="Таблички"
         Width="800"
         Height="600"
         WindowStartupLocation="CenterScreen"
@@ -14,6 +14,7 @@
         <Window.Resources>
                 <Style TargetType="DataGrid">
                         <Setter Property="Margin" Value="10" />
+                        <Setter Property="FontFamily" Value="Times New Roman" />
                 </Style>
         </Window.Resources>
         <StackPanel>
@@ -22,7 +23,6 @@
                 <DataGrid
                         x:Name="EmployeesDataGrid"
                         AutoGenerateColumns="False"
-                        FontFamily="Times new Roman"
                         FontSize="20"
                         IsReadOnly="True">
                         <DataGrid.Columns>
@@ -37,7 +37,6 @@
                 <DataGrid
                         x:Name="ClaimsIncludedDataGrid"
                         AutoGenerateColumns="False"
-                        FontFamily="Times new Roman"
                         FontSize="20"
                         IsReadOnly="True">
                         <DataGrid.Columns>
@@ -51,30 +50,6 @@
                                 <DataGridTextColumn Binding="{Binding Payout}" Header="Выплаченные средства" />
                         </DataGrid.Columns>
                 </DataGrid>
-                <Label FontFamily="Bahnschrift" FontSize="30">Posgress SQL</Label>
-                <Label FontFamily="Bahnschrift" FontSize="20">1: Таблица выделяет Рабочих с помощью sql запроса</Label>
-                <ComboBox
-                        x:Name="DatabaseComboBox"
-                        FontFamily="Bahnschrift"
-                        FontSize="20" />
-                <Button
-                        Click="LoadButton_Click"
-                        Content="Загрузить все данные без фильтраций"
-                        FontFamily="Bahnschrift"
-                        FontSize="20" />
-                <DataGrid
-                        x:Name="PolicyHoldersDataGrid"
-                        AutoGenerateColumns="False"
-                        FontFamily="Times new Roman"
-                        FontSize="20"
-                        IsReadOnly="True">
-                        <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding PolicyNumber}" Header="ID" />
-                                <DataGridTextColumn Binding="{Binding FullName}" Header="FullName" />
-                                <DataGridTextColumn Binding="{Binding Passport}" Header="Паспорт" />
-                                <DataGridTextColumn Binding="{Binding BirthDate}" Header="День Рождения" />
-                                <DataGridTextColumn Binding="{Binding EmployeeId}" Header="Сотрудник подписавший полис" />
-                        </DataGrid.Columns>
-                </DataGrid>
+                
         </StackPanel>
 </Window>
