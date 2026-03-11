@@ -11,13 +11,17 @@ namespace ImportAndVisualiseTwoTables;
 public partial class MainWindow : Window
 {
     private readonly InsuranceContext dbContext;
+    private readonly ModelsPostgresSQL.InsuranceContext dbContext2;
     private List<int> employeeIds;
     public MainWindow()
     {
         InitializeComponent();
         dbContext = new InsuranceContext();
+        dbContext2 = new ModelsPostgresSQL.InsuranceContext();
         LoadEmployeesDataGrid();
         LoadClaimsDataGrid();
+        LoadEmployersComboBox();
+        LoadPolicyHoldersDataGrid();
     }
 
     private void LoadEmployeesDataGrid()
@@ -36,4 +40,34 @@ public partial class MainWindow : Window
             .AsNoTracking()
             .ToList();
     }
+
+    private void LoadEmployersComboBox()
+    {
+        employeeIds = dbContext.Employees.Select(e => e.EmployeeId).ToList();
+        DatabaseComboBox.ItemsSource = employeeIds;
+
+        DatabaseComboBox.SelectionChanged += (s, e) =>
+        {
+            if (DatabaseComboBox.SelectedItem is int selectedEmployeeId)
+            {
+                PolicyHoldersDataGrid.ItemsSource = dbContext2.Policyholders
+                    .Where(p => p.EmployeeId == selectedEmployeeId)
+                    .AsNoTracking()
+                    .ToList();
+            }
+        };
+    }
+
+    private void LoadPolicyHoldersDataGrid()
+    {
+        PolicyHoldersDataGrid.ItemsSource = dbContext2.Policyholders
+            .AsNoTracking()
+            .ToList();
+    }
+
+    private void LoadButton_Click(object sender, RoutedEventArgs e)
+    {
+        LoadPolicyHoldersDataGrid();
+    }
+
 }
