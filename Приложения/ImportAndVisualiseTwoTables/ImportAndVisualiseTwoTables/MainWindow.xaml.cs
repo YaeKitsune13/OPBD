@@ -11,7 +11,7 @@ namespace ImportAndVisualiseTwoTables;
 public partial class MainWindow : Window
 {
     private readonly InsuranceContext dbContext;
-
+    private List<int> employeeIds;
     public MainWindow()
     {
         InitializeComponent();

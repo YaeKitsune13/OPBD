@@ -34,6 +34,6 @@
             </DataGrid.Columns>
         </DataGrid>
         <Label FontSize="30" FontFamily="Bahnschrift">Posgress SQL</Label>
-        
+        <ComboBox x:Name="DatabaseComboBox"></ComboBox>
     </StackPanel>
 </Window>
