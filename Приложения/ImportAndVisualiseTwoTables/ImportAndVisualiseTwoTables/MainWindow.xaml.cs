@@ -33,26 +33,42 @@ public partial class MainWindow : Window
         EmployeesPostgreDataGrid.ItemsSource = dbContext2.Employees
             .FromSqlRaw("SELECT * FROM employees")
             .ToList();
+
         EmployeesPostgreDataGrid.SelectionChanged += EmployeesPostgreDataGrid_SelectionChanged;
     }
 
     private void EmployeesDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (EmployeesDataGrid.SelectedItem is Models.Employees selectedEmployee)
+        {
             ClaimsIncludedDataGrid.ItemsSource = dbContext.Claims
                 .Include(c => c.PolicyNumberNavigation)
                 .Where(c => c.PolicyNumberNavigation!.EmployeeId == selectedEmployee.EmployeeId)
                 .AsNoTracking()
                 .ToList();
+
+            ClaimsIncludedDataGridSQL.ItemsSource = dbContext2.Claims
+                .FromSqlRaw("SELECT c.* FROM claims c JOIN policyholders p ON c.policy_number = p.policy_number WHERE p.employee_id = {0}", selectedEmployee.EmployeeId)
+                .Include(c => c.PolicyNumberNavigation)
+                .ToList();
+        }
     }
 
     private void EmployeesPostgreDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (EmployeesPostgreDataGrid.SelectedItem is ModelsPostgresSQL.Employee selectedEmployee)
+        {
             ClaimsPostgreIncludedDataGrid.ItemsSource = dbContext2.Claims
                 .Include(c => c.PolicyNumberNavigation)
                 .Where(c => c.PolicyNumberNavigation!.EmployeeId == selectedEmployee.EmployeeId)
                 .AsNoTracking()
                 .ToList();
+
+            ClaimsPostgreIncludedDataGridSql.ItemsSource = dbContext2.Claims
+                .FromSqlRaw("SELECT c.* FROM claims c JOIN policyholders p ON c.policy_number = p.policy_number WHERE p.employee_id = {0}", selectedEmployee.EmployeeId)
+                .Include(c => c.PolicyNumberNavigation)
+                .ToList();
+        }
     }
+
 }
