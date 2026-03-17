@@ -1,0 +1,309 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ImportAndVisualiseTwoTablesAvalonia.MainWindow"
+        Title="Таблички"
+        Width="1400" Height="900"
+        Background="White"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized">
+    
+    <Grid RowDefinitions="*,*" Margin="10">
+        
+        <!-- ═══════════════ MySQL секция ═══════════════ -->
+        <Grid Grid.Row="0" RowDefinitions="Auto,Auto,*,Auto,Auto,*" Margin="10">
+            <TextBlock Grid.Row="0" 
+                       Text="MySQL" 
+                       FontSize="30" 
+                       FontFamily="Bahnschrift" 
+                       Foreground="Black" 
+                       Margin="0,0,0,10"/>
+            
+            <TextBlock Grid.Row="1" 
+                       Text="1: Таблица выделяет Рабочих с помощью SQL запроса" 
+                       FontSize="20" 
+                       FontFamily="Bahnschrift" 
+                       Foreground="Black" 
+                       Margin="0,0,0,5"/>
+            
+            <!-- Employees таблица с заголовками -->
+            <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,10">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Заголовки -->
+                    <Border Grid.Row="0" Background="LightBlue" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                        <Grid ColumnDefinitions="80,250,150,200,120" Height="40">
+                            <TextBlock Grid.Column="0" Text="ID" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="1" Text="ФИО" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="2" Text="Паспорт" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="3" Text="Должность" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="4" Text="Кол-во застрах." FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Данные -->
+                    <ListBox Grid.Row="1" x:Name="MySQLEmployeesListBox" Background="White" SelectionMode="Single">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="5">
+                                    <Grid ColumnDefinitions="80,250,150,200,120">
+                                        <TextBlock Grid.Column="0" Text="{Binding EmployeeId}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding FullName}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Passport}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Position}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding CountPolicyholders}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+            
+            <TextBlock Grid.Row="3" 
+                       Text="2: Таблица выделяет Claims Policyholders и выводит случившиеся происшествия" 
+                       FontSize="20" 
+                       FontFamily="Bahnschrift" 
+                       Foreground="Black" 
+                       Margin="0,5"/>
+            
+            <!-- Подписи LINQ / SQL -->
+            <Grid Grid.Row="4" ColumnDefinitions="*,*" Height="30">
+                <TextBlock Grid.Column="0" 
+                           Text="LINQ запрос" 
+                           FontSize="16" 
+                           FontFamily="Bahnschrift" 
+                           Foreground="Gray" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" 
+                           Text="SQL запрос" 
+                           FontSize="16" 
+                           FontFamily="Bahnschrift" 
+                           Foreground="Gray" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+            </Grid>
+            
+            <!-- Claims таблицы -->
+            <Grid Grid.Row="5" ColumnDefinitions="*,*">
+                <!-- LINQ Claims -->
+                <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="0,5,5,0">
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Заголовки LINQ -->
+                        <Border Grid.Row="0" Background="LightGreen" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                            <Grid ColumnDefinitions="60,80,150,100,100" Height="35">
+                                <TextBlock Grid.Column="0" Text="ID" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="1" Text="Policy#" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="2" Text="Описание" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="3" Text="Дата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="4" Text="Выплата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Данные LINQ -->
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl x:Name="MySQLClaimsLINQ">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="3" Background="White">
+                                            <Grid ColumnDefinitions="60,80,150,100,100">
+                                                <TextBlock Grid.Column="0" Text="{Binding ClaimId}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding PolicyNumberNavigation.PolicyNumber}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Description}" FontSize="14" Foreground="Black" TextWrapping="Wrap" Margin="5,3"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding EventDate, StringFormat='{}{0:dd.MM.yyyy}'}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding Payout}" FontSize="14" Foreground="DarkGreen" Margin="5,3"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+                
+                <!-- SQL Claims -->
+                <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Margin="5,5,0,0">
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Заголовки SQL -->
+                        <Border Grid.Row="0" Background="LightCoral" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                            <Grid ColumnDefinitions="60,80,150,100,100" Height="35">
+                                <TextBlock Grid.Column="0" Text="ID" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="1" Text="Policy#" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="2" Text="Описание" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="3" Text="Дата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="4" Text="Выплата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Данные SQL -->
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl x:Name="MySQLClaimsSQL">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="3" Background="White">
+                                            <Grid ColumnDefinitions="60,80,150,100,100">
+                                                <TextBlock Grid.Column="0" Text="{Binding ClaimId}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding PolicyNumberNavigation.PolicyNumber}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Description}" FontSize="14" Foreground="Black" TextWrapping="Wrap" Margin="5,3"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding EventDate, StringFormat='{}{0:dd.MM.yyyy}'}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding Payout}" FontSize="14" Foreground="DarkGreen" Margin="5,3"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+        
+        <!-- ═══════════════ PostgreSQL секция ═══════════════ -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto,Auto,*" Margin="10">
+            <TextBlock Grid.Row="0" 
+                       Text="PostgreSQL" 
+                       FontSize="30" 
+                       FontFamily="Bahnschrift" 
+                       Foreground="Black" 
+                       Margin="0,0,0,10"/>
+            
+            <TextBlock Grid.Row="1" 
+                       Text="1: Таблица выделяет Рабочих с помощью SQL запроса" 
+                       FontSize="20" 
+                       FontFamily="Bahnschrift" 
+                       Foreground="Black" 
+                       Margin="0,0,0,5"/>
+            
+            <!-- Employees таблица с заголовками -->
+            <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,10">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Заголовки -->
+                    <Border Grid.Row="0" Background="LightBlue" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                        <Grid ColumnDefinitions="80,250,150,200,120" Height="40">
+                            <TextBlock Grid.Column="0" Text="ID" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="1" Text="ФИО" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="2" Text="Паспорт" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="3" Text="Должность" FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                            <TextBlock Grid.Column="4" Text="Кол-во застрах." FontWeight="Bold" FontSize="16" Foreground="Black" VerticalAlignment="Center" Margin="10,0"/>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Данные -->
+                    <ListBox Grid.Row="1" x:Name="PostgreSQLEmployeesListBox" Background="White" SelectionMode="Single">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="5">
+                                    <Grid ColumnDefinitions="80,250,150,200,120">
+                                        <TextBlock Grid.Column="0" Text="{Binding EmployeeId}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding FullName}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Passport}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Position}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding CountPolicyholders}" FontSize="16" Foreground="Black" Margin="10,5"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+            
+            <TextBlock Grid.Row="3" 
+                       Text="2: Таблица выделяет Claims Policyholders и выводит случившиеся происшествия" 
+                       FontSize="20" 
+                       FontFamily="Bahnschrift" 
+                       Foreground="Black" 
+                       Margin="0,5"/>
+            
+            <!-- Подписи LINQ / SQL -->
+            <Grid Grid.Row="4" ColumnDefinitions="*,*" Height="30">
+                <TextBlock Grid.Column="0" 
+                           Text="LINQ запрос" 
+                           FontSize="16" 
+                           FontFamily="Bahnschrift" 
+                           Foreground="Gray" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" 
+                           Text="SQL запрос" 
+                           FontSize="16" 
+                           FontFamily="Bahnschrift" 
+                           Foreground="Gray" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+            </Grid>
+            
+            <!-- Claims таблицы -->
+            <Grid Grid.Row="5" ColumnDefinitions="*,*">
+                <!-- LINQ Claims -->
+                <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="0,5,5,0">
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Заголовки LINQ -->
+                        <Border Grid.Row="0" Background="LightGreen" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                            <Grid ColumnDefinitions="60,80,150,100,100" Height="35">
+                                <TextBlock Grid.Column="0" Text="ID" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="1" Text="Policy#" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="2" Text="Описание" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="3" Text="Дата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="4" Text="Выплата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Данные LINQ -->
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl x:Name="PostgreSQLClaimsLINQ">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="3" Background="White">
+                                            <Grid ColumnDefinitions="60,80,150,100,100">
+                                                <TextBlock Grid.Column="0" Text="{Binding ClaimId}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding PolicyNumberNavigation.PolicyNumber}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Description}" FontSize="14" Foreground="Black" TextWrapping="Wrap" Margin="5,3"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding EventDate, StringFormat='{}{0:dd.MM.yyyy}'}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding Payout}" FontSize="14" Foreground="DarkGreen" Margin="5,3"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+                
+                <!-- SQL Claims -->
+                <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Margin="5,5,0,0">
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Заголовки SQL -->
+                        <Border Grid.Row="0" Background="LightCoral" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                            <Grid ColumnDefinitions="60,80,150,100,100" Height="35">
+                                <TextBlock Grid.Column="0" Text="ID" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="1" Text="Policy#" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="2" Text="Описание" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="3" Text="Дата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                                <TextBlock Grid.Column="4" Text="Выплата" FontWeight="Bold" FontSize="14" Foreground="Black" VerticalAlignment="Center" Margin="5,0"/>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Данные SQL -->
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl x:Name="PostgreSQLClaimsSQL">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="3" Background="White">
+                                            <Grid ColumnDefinitions="60,80,150,100,100">
+                                                <TextBlock Grid.Column="0" Text="{Binding ClaimId}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding PolicyNumberNavigation.PolicyNumber}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Description}" FontSize="14" Foreground="Black" TextWrapping="Wrap" Margin="5,3"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding EventDate, StringFormat='{}{0:dd.MM.yyyy}'}" FontSize="14" Foreground="Black" Margin="5,3"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding Payout}" FontSize="14" Foreground="DarkGreen" Margin="5,3"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+        
+    </Grid>
+</Window>
