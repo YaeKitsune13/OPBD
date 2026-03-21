@@ -15,7 +15,8 @@ create table employees (
                            employee_id int primary key,
                            full_name varchar(100),
                            passport varchar(50),
-                           position varchar(60)
+                           position varchar(60),
+                           count_policyholders int
 ) engine=innodb;
 
 -- 3. страхователи (полисы)
