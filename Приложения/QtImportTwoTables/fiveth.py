@@ -1,6 +1,6 @@
 import sys
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
-                             QWidget, QLabel, QMessageBox, QSplitter, 
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
+                             QWidget, QLabel, QMessageBox, QSplitter,
                              QComboBox, QScrollArea, QFrame)
 from PyQt6.QtSql import QSqlDatabase, QSqlQueryModel, QSqlQuery
 from PyQt6.QtCore import Qt
@@ -10,127 +10,139 @@ from PyQt6.QtGui import QFont
 MYSQL_HOST, MYSQL_DB, MYSQL_USER, MYSQL_PASS = "127.0.0.1", "insurance", "root", "1234"
 PG_HOST, PG_DB, PG_USER, PG_PASS = "127.0.0.1", "insurance", "postgres", "1234"
 
-# SQL Запросы
-SQL_GET_EMPLOYEES = "SELECT employee_id, full_name FROM employees"
-SQL_GET_POLICYHOLDERS = "SELECT policy_number, full_name FROM policyholders WHERE employee_id = :emp_id"
-SQL_GET_CLAIMS = "SELECT claim_id, description, event_date, payout FROM claims WHERE policy_number = :policy_num"
+# --- ОБНОВЛЕННЫЕ SQL ЗАПРОСЫ ---
+# Используем UNION для добавления варианта "Все"
+SQL_GET_EMPLOYEES = """
+    SELECT 0 AS employee_id, 'Все' AS full_name
+    UNION ALL
+    SELECT employee_id, full_name FROM employees
+"""
 
-# --- АНАЛОГ USERCONTROL (Карточка с отображением ключей и данных) ---
+# Для клиентов: добавляем "Все", фильтруем по сотруднику если emp_id != 0
+SQL_GET_POLICYHOLDERS_ALL = """
+    SELECT '0' AS policy_number, 'Все' AS full_name
+    UNION ALL
+    SELECT policy_number, full_name FROM policyholders
+"""
+SQL_GET_POLICYHOLDERS_FILTER = """
+    SELECT '0' AS policy_number, 'Все' AS full_name
+    UNION ALL
+    SELECT policy_number, full_name FROM policyholders WHERE employee_id = :emp_id
+"""
+
+# Для страховых случаев: разные сценарии выборки
+SQL_CLAIMS_EVERYTHING = "SELECT claim_id, description, event_date, payout, policy_number FROM claims"
+SQL_CLAIMS_BY_EMPLOYEE = """
+    SELECT c.claim_id, c.description, c.event_date, c.payout, c.policy_number 
+    FROM claims c
+    JOIN policyholders p ON c.policy_number = p.policy_number
+    WHERE p.employee_id = :emp_id
+"""
+SQL_CLAIMS_BY_POLICY = "SELECT claim_id, description, event_date, payout, policy_number FROM claims WHERE policy_number = :policy_num"
+
+
 class ClaimCard(QFrame):
-    def __init__(self, emp_id, policy_num, claim_id, description, date, payout):
+    def __init__(self, policy_num, claim_id, description, date, payout):
         super().__init__()
-        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setFrameShape(QFrame.Shape.NoFrame)
+        self.setFixedHeight(100)
+        self.setContentsMargins(5, 5, 5, 5)
         self.setStyleSheet("""
             ClaimCard {
-                background-color: #fcfcfc;
-                border: 1px solid #d1d1d1;
+                background-color: #F9F9F9;
+                border: 1px solid #CCCCCC;
                 border-radius: 8px;
-                margin-bottom: 10px;
-            }
-            QLabel#KeyLabel {
-                color: #7f8c8d;
-                font-size: 10px;
-                text-transform: uppercase;
-            }
-            QLabel#KeyValue {
-                color: #e67e22;
-                font-weight: bold;
-                font-family: 'Consolas';
-            }
-            QLabel#DataText {
-                font-size: 14px;
-                color: #2c3e50;
-            }
-            QLabel#Payout {
-                font-size: 16px;
-                font-weight: bold;
-                color: #27ae60;
             }
         """)
 
-        main_layout = QVBoxLayout()
+        outer = QHBoxLayout(self)
+        outer.setContentsMargins(10, 10, 10, 10)
+        outer.setSpacing(0)
 
-        # 1. Секция ключей (Путь, который привел к записи)
-        keys_layout = QHBoxLayout()
+        placeholder = QLabel("📄")
+        placeholder.setFixedSize(70, 70)
+        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        placeholder.setStyleSheet("background-color: #CCCCCC; border-radius: 8px; font-size: 28px;")
+        outer.addWidget(placeholder, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        info_layout = QVBoxLayout()
+        info_layout.setContentsMargins(15, 0, 15, 0)
+        info_layout.setSpacing(4)
+
+        lbl_desc = QLabel(str(description))
+        lbl_desc.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        lbl_desc.setStyleSheet("color: #1a1a1a; font-size: 13px;")
+
+        # Форматирование даты
+        try:
+            if hasattr(date, "toPyDate"): date_str = date.toPyDate().strftime("%d.%m.%Y")
+            elif hasattr(date, "toString"): date_str = date.toString("dd.MM.yyyy")
+            else: date_str = str(date)
+        except: date_str = str(date)
+
+        lbl_date = QLabel(f"Дата: {date_str}")
+        lbl_date.setStyleSheet("color: #888888; font-size: 11px;")
+
+        lbl_policy = QLabel(f"Полис: {policy_num}")
+        lbl_policy.setStyleSheet("color: #888888; font-size: 11px;")
+
+        info_layout.addWidget(lbl_desc)
+        info_layout.addWidget(lbl_date)
+        info_layout.addWidget(lbl_policy)
+        outer.addLayout(info_layout, 1)
+
+        payout_badge = QFrame()
+        payout_badge.setFixedSize(110, 70)
+        payout_badge.setStyleSheet("background-color: #4CAF50; border-radius: 8px;")
+        badge_layout = QVBoxLayout(payout_badge)
         
-        def add_key(label, value):
-            v_box = QVBoxLayout()
-            lbl = QLabel(label); lbl.setObjectName("KeyLabel")
-            val = QLabel(str(value)); val.setObjectName("KeyValue")
-            v_box.addWidget(lbl)
-            v_box.addWidget(val)
-            keys_layout.addLayout(v_box)
+        lbl_payout_title = QLabel("Выплата")
+        lbl_payout_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl_payout_title.setStyleSheet("color: white; font-size: 11px; background: transparent;")
 
-        add_key("Emp ID", emp_id)
-        keys_layout.addSpacing(20)
-        add_key("Policy №", policy_num)
-        keys_layout.addSpacing(20)
-        add_key("Claim ID", claim_id)
-        keys_layout.addStretch()
-        
-        main_layout.addLayout(keys_layout)
-        
-        # Разделительная линия
-        line = QFrame(); line.setFrameShape(QFrame.Shape.HLine); line.setFrameShadow(QFrame.Shadow.Sunken)
-        main_layout.addWidget(line)
+        try: payout_formatted = f"{float(payout):,.0f}".replace(",", " ")
+        except: payout_formatted = str(payout)
 
-        # 2. Секция данных
-        lbl_desc = QLabel(f"Описание: {description}")
-        lbl_desc.setObjectName("DataText")
-        lbl_desc.setWordWrap(True)
-        
-        lbl_date = QLabel(f"Дата происшествия: {date}")
-        lbl_date.setObjectName("DataText")
+        lbl_payout_value = QLabel(f"{payout_formatted} ₽")
+        lbl_payout_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl_payout_value.setStyleSheet("color: white; font-size: 14px; font-weight: bold; background: transparent;")
 
-        lbl_payout = QLabel(f"Сумма выплаты: {payout} ₽")
-        lbl_payout.setObjectName("Payout")
-        lbl_payout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        badge_layout.addWidget(lbl_payout_title)
+        badge_layout.addWidget(lbl_payout_value)
+        outer.addWidget(payout_badge, 0, Qt.AlignmentFlag.AlignVCenter)
 
-        main_layout.addWidget(lbl_desc)
-        main_layout.addWidget(lbl_date)
-        main_layout.addWidget(lbl_payout)
 
-        self.setLayout(main_layout)
-
-# --- ОСНОВНАЯ СЕКЦИЯ БД ---
 class DatabaseSection(QWidget):
     def __init__(self, title, db_connection_name):
         super().__init__()
         self.db_name = db_connection_name
-        self.current_emp_id = None
+        self.current_emp_id = 0
         self.init_ui(title)
         self.load_employees()
 
     def init_ui(self, title):
         layout = QVBoxLayout()
-        
-        # Заголовок движка
         lbl_title = QLabel(title)
         lbl_title.setFont(QFont("Bahnschrift", 22))
         lbl_title.setStyleSheet("color: #2980b9;")
         layout.addWidget(lbl_title)
 
-        # Комбобоксы
         grid_layout = QHBoxLayout()
         
         v_emp = QVBoxLayout()
-        v_emp.addWidget(QLabel("1. Выберите сотрудника:"))
+        v_emp.addWidget(QLabel("1. Сотрудник:"))
         self.combo_emp = QComboBox()
-        self.combo_emp.currentIndexChanged.connect(self.on_employee_changed)
         v_emp.addWidget(self.combo_emp)
-        
+
         v_hold = QVBoxLayout()
-        v_hold.addWidget(QLabel("2. Выберите клиента:"))
+        v_hold.addWidget(QLabel("2. Клиент:"))
         self.combo_holder = QComboBox()
-        self.combo_holder.currentIndexChanged.connect(self.on_policyholder_changed)
         v_hold.addWidget(self.combo_holder)
-        
+
         grid_layout.addLayout(v_emp)
         grid_layout.addLayout(v_hold)
         layout.addLayout(grid_layout)
 
-        # Область для карточек (UserControls)
-        layout.addWidget(QLabel("Результаты (Claims):"))
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll_content = QWidget()
@@ -141,11 +153,13 @@ class DatabaseSection(QWidget):
 
         self.setLayout(layout)
 
-        # Модели
         self.model_emp = QSqlQueryModel()
         self.model_holder = QSqlQueryModel()
         self.combo_emp.setModel(self.model_emp)
         self.combo_holder.setModel(self.model_holder)
+
+        self.combo_emp.currentIndexChanged.connect(self.on_employee_changed)
+        self.combo_holder.currentIndexChanged.connect(self.on_policyholder_changed)
 
     def load_employees(self):
         db = QSqlDatabase.database(self.db_name)
@@ -157,37 +171,50 @@ class DatabaseSection(QWidget):
     def on_employee_changed(self, index):
         if index < 0: return
         self.current_emp_id = self.model_emp.record(index).value("employee_id")
-        
+
         db = QSqlDatabase.database(self.db_name)
         query = QSqlQuery(db)
-        query.prepare(SQL_GET_POLICYHOLDERS)
-        query.bindValue(":emp_id", self.current_emp_id)
-        query.exec()
         
+        if self.current_emp_id == 0:
+            query.exec(SQL_GET_POLICYHOLDERS_ALL)
+        else:
+            query.prepare(SQL_GET_POLICYHOLDERS_FILTER)
+            query.bindValue(":emp_id", self.current_emp_id)
+            query.exec()
+
         self.model_holder.setQuery(query)
         self.combo_holder.setModelColumn(1)
+        # Принудительно сбрасываем индекс, чтобы сработало событие "Все"
+        self.combo_holder.setCurrentIndex(0)
 
     def on_policyholder_changed(self, index):
-        # Очистка старых карточек
+        # Очистка карточек
         while self.cards_layout.count():
-            item = self.cards_layout.takeAt(0)
-            if item.widget(): item.widget().deleteLater()
+            child = self.cards_layout.takeAt(0)
+            if child.widget(): child.widget().deleteLater()
 
         if index < 0: return
-        
-        policy_num = self.model_holder.record(index).value("policy_number")
-        
+
+        policy_num = str(self.model_holder.record(index).value("policy_number"))
         db = QSqlDatabase.database(self.db_name)
         query = QSqlQuery(db)
-        query.prepare(SQL_GET_CLAIMS)
-        query.bindValue(":policy_num", policy_num)
+
+        # ЛОГИКА ВЫБОРКИ CLAIMS:
+        if policy_num == "0":  # Выбрано "Все" в клиентах
+            if self.current_emp_id == 0: # И "Все" в сотрудниках
+                query.prepare(SQL_CLAIMS_EVERYTHING)
+            else: # "Все" клиенты конкретного сотрудника
+                query.prepare(SQL_CLAIMS_BY_EMPLOYEE)
+                query.bindValue(":emp_id", self.current_emp_id)
+        else: # Конкретный клиент
+            query.prepare(SQL_CLAIMS_BY_POLICY)
+            query.bindValue(":policy_num", policy_num)
+        
         query.exec()
 
-        # Создаем карточки (UserControls)
         while query.next():
             card = ClaimCard(
-                emp_id=self.current_emp_id,
-                policy_num=policy_num,
+                policy_num=query.value("policy_number"),
                 claim_id=query.value("claim_id"),
                 description=query.value("description"),
                 date=query.value("event_date"),
@@ -195,24 +222,21 @@ class DatabaseSection(QWidget):
             )
             self.cards_layout.addWidget(card)
 
-# --- ГЛАВНОЕ ОКНО ---
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Insurance Key-Value Cards")
+        self.setWindowTitle("Insurance Cards (Filter: All)")
         self.resize(1200, 800)
-
-        if not self.init_databases():
-            sys.exit(1)
+        if not self.init_databases(): sys.exit(1)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(DatabaseSection("MySQL", "mysql_conn"))
         splitter.addWidget(DatabaseSection("PostgreSQL", "pg_conn"))
-        
         self.setCentralWidget(splitter)
 
     def init_databases(self):
-        db_ms = QSqlDatabase.addDatabase("QMARIADB", "mysql_conn")
+        db_ms = QSqlDatabase.addDatabase("QMARIADB", "mysql_conn") # или QMYSQL
         db_ms.setHostName(MYSQL_HOST); db_ms.setDatabaseName(MYSQL_DB)
         db_ms.setUserName(MYSQL_USER); db_ms.setPassword(MYSQL_PASS)
 
@@ -220,11 +244,8 @@ class MainWindow(QMainWindow):
         db_pg.setHostName(PG_HOST); db_pg.setDatabaseName(PG_DB)
         db_pg.setUserName(PG_USER); db_pg.setPassword(PG_PASS)
 
-        if not db_ms.open():
-            QMessageBox.critical(self, "Error", f"MySQL Error: {db_ms.lastError().text()}")
-            return False
-        if not db_pg.open():
-            QMessageBox.critical(self, "Error", f"PostgreSQL Error: {db_pg.lastError().text()}")
+        if not db_ms.open() or not db_pg.open():
+            QMessageBox.critical(self, "Error", "Database Connection Failed")
             return False
         return True
 

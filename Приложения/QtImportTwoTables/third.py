@@ -10,49 +10,65 @@ from PyQt6.QtGui import QFont
 MYSQL_HOST, MYSQL_DB, MYSQL_USER, MYSQL_PASS = "127.0.0.1", "insurance", "root", "1234"
 PG_HOST, PG_DB, PG_USER, PG_PASS = "127.0.0.1", "insurance", "postgres", "1234"
 
-# --- SQL ЗАПРОСЫ ---
-# 1. Загрузка сотрудников
-SQL_GET_EMPLOYEES = "SELECT employee_id, full_name FROM employees"
+# --- ОБНОВЛЕННЫЕ SQL ЗАПРОСЫ ---
 
-# 2. Загрузка клиентов конкретного сотрудника
-SQL_GET_POLICYHOLDERS = "SELECT policy_number, full_name FROM policyholders WHERE employee_id = :emp_id"
+# 1. Сотрудники + строка "Все"
+SQL_GET_EMPLOYEES = """
+    SELECT 0 AS employee_id, 'Все' AS full_name
+    UNION ALL
+    SELECT employee_id, full_name FROM employees
+"""
 
-# 3. Загрузка претензий конкретного клиента
-SQL_GET_CLAIMS = """
+# 2. Клиенты (Фильтр по сотруднику или Все)
+SQL_GET_POLICYHOLDERS_ALL = """
+    SELECT '0' AS policy_number, 'Все' AS full_name
+    UNION ALL
+    SELECT policy_number, full_name FROM policyholders
+"""
+SQL_GET_POLICYHOLDERS_BY_EMP = """
+    SELECT '0' AS policy_number, 'Все' AS full_name
+    UNION ALL
+    SELECT policy_number, full_name FROM policyholders WHERE employee_id = :emp_id
+"""
+
+# 3. Претензии (Разные уровни фильтрации)
+SQL_CLAIMS_ALL = "SELECT claim_id, policy_number, description, event_date, payout FROM claims"
+
+SQL_CLAIMS_BY_EMP = """
+    SELECT c.claim_id, c.policy_number, c.description, c.event_date, c.payout 
+    FROM claims c
+    JOIN policyholders p ON c.policy_number = p.policy_number
+    WHERE p.employee_id = :emp_id
+"""
+
+SQL_CLAIMS_BY_POLICY = """
     SELECT claim_id, policy_number, description, event_date, payout 
-    FROM claims 
-    WHERE policy_number = :policy_num
+    FROM claims WHERE policy_number = :policy_num
 """
 
 class DatabaseSection(QWidget):
     def __init__(self, title, db_connection_name):
         super().__init__()
         self.db_name = db_connection_name
+        self.current_emp_id = 0 # По умолчанию "Все"
         self.init_ui(title)
         self.load_employees()
 
     def init_ui(self, title):
         layout = QVBoxLayout()
-        
-        # Шрифты
         font_title = QFont("Bahnschrift", 20)
         font_label = QFont("Bahnschrift", 12)
 
         layout.addWidget(QLabel(title, font=font_title))
 
-        # --- ВЫБОР СОТРУДНИКА ---
         layout.addWidget(QLabel("Выберите сотрудника:", font=font_label))
         self.combo_employee = QComboBox()
-        self.combo_employee.currentIndexChanged.connect(self.on_employee_changed)
         layout.addWidget(self.combo_employee)
 
-        # --- ВЫБОР КЛИЕНТА ---
-        layout.addWidget(QLabel("Выберите застрахованное лицо (клиента):", font=font_label))
+        layout.addWidget(QLabel("Выберите клиента:", font=font_label))
         self.combo_policyholder = QComboBox()
-        self.combo_policyholder.currentIndexChanged.connect(self.on_policyholder_changed)
         layout.addWidget(self.combo_policyholder)
 
-        # --- ТАБЛИЦА ПРЕТЕНЗИЙ ---
         layout.addWidget(QLabel("Список страховых случаев (Claims):", font=font_label))
         self.claims_view = QTableView()
         self.claims_view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -60,7 +76,6 @@ class DatabaseSection(QWidget):
 
         self.setLayout(layout)
 
-        # Модели данных
         self.model_emp = QSqlQueryModel()
         self.model_holder = QSqlQueryModel()
         self.model_claims = QSqlQueryModel()
@@ -69,45 +84,54 @@ class DatabaseSection(QWidget):
         self.combo_policyholder.setModel(self.model_holder)
         self.claims_view.setModel(self.model_claims)
 
+        # Сигналы
+        self.combo_employee.currentIndexChanged.connect(self.on_employee_changed)
+        self.combo_policyholder.currentIndexChanged.connect(self.on_policyholder_changed)
+
     def load_employees(self):
-        """Заполнение первого комбобокса (Сотрудники)"""
         db = QSqlDatabase.database(self.db_name)
         query = QSqlQuery(db)
         query.exec(SQL_GET_EMPLOYEES)
         self.model_emp.setQuery(query)
-        self.combo_employee.setModelColumn(1) # Показываем full_name
+        self.combo_employee.setModelColumn(1)
 
     def on_employee_changed(self, index):
-        """Событие: выбран сотрудник -> грузим его клиентов"""
         if index < 0: return
-        
-        # Получаем ID сотрудника из скрытой колонки 0
-        emp_id = self.model_emp.record(index).value("employee_id")
+        self.current_emp_id = self.model_emp.record(index).value("employee_id")
         
         db = QSqlDatabase.database(self.db_name)
         query = QSqlQuery(db)
-        query.prepare(SQL_GET_POLICYHOLDERS)
-        query.bindValue(":emp_id", emp_id)
-        query.exec()
+        
+        if self.current_emp_id == 0:
+            query.exec(SQL_GET_POLICYHOLDERS_ALL)
+        else:
+            query.prepare(SQL_GET_POLICYHOLDERS_BY_EMP)
+            query.bindValue(":emp_id", self.current_emp_id)
+            query.exec()
         
         self.model_holder.setQuery(query)
-        self.combo_policyholder.setModelColumn(1) # Показываем full_name клиента
+        self.combo_policyholder.setModelColumn(1)
+        # Сбрасываем выбор клиента на "Все" (индекс 0)
+        self.combo_policyholder.setCurrentIndex(0)
 
     def on_policyholder_changed(self, index):
-        """Событие: выбран клиент -> грузим его страховые случаи"""
-        if index < 0:
-            self.model_claims.clear()
-            return
+        if index < 0: return
         
-        # Получаем policy_number клиента из скрытой колонки 0
-        policy_num = self.model_holder.record(index).value("policy_number")
-        
+        policy_num = str(self.model_holder.record(index).value("policy_number"))
         db = QSqlDatabase.database(self.db_name)
         query = QSqlQuery(db)
-        query.prepare(SQL_GET_CLAIMS)
-        query.bindValue(":policy_num", policy_num)
-        query.exec()
         
+        if policy_num == "0": # Выбрано "Все" в списке клиентов
+            if self.current_emp_id == 0: # И "Все" в списке сотрудников
+                query.prepare(SQL_CLAIMS_ALL)
+            else: # Все клиенты конкретного сотрудника
+                query.prepare(SQL_CLAIMS_BY_EMP)
+                query.bindValue(":emp_id", self.current_emp_id)
+        else: # Конкретный клиент
+            query.prepare(SQL_CLAIMS_BY_POLICY)
+            query.bindValue(":policy_num", policy_num)
+        
+        query.exec()
         self.model_claims.setQuery(query)
         self._set_claims_headers()
 
@@ -116,42 +140,29 @@ class DatabaseSection(QWidget):
         for i, h in enumerate(headers):
             self.model_claims.setHeaderData(i, Qt.Orientation.Horizontal, h)
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Insurance Database Management")
-        self.resize(1000, 700)
-
-        if not self.init_databases():
-            sys.exit(1)
+        self.setWindowTitle("Insurance Database Management (Filter: ALL)")
+        self.resize(1100, 750)
+        if not self.init_databases(): sys.exit(1)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(DatabaseSection("MySQL", "mysql_conn"))
         splitter.addWidget(DatabaseSection("PostgreSQL", "pg_conn"))
-
         self.setCentralWidget(splitter)
 
     def init_databases(self):
-        # MySQL
         db_ms = QSqlDatabase.addDatabase("QMARIADB", "mysql_conn")
-        db_ms.setHostName(MYSQL_HOST)
-        db_ms.setDatabaseName(MYSQL_DB)
-        db_ms.setUserName(MYSQL_USER)
-        db_ms.setPassword(MYSQL_PASS)
+        db_ms.setHostName(MYSQL_HOST); db_ms.setDatabaseName(MYSQL_DB)
+        db_ms.setUserName(MYSQL_USER); db_ms.setPassword(MYSQL_PASS)
 
-        # PostgreSQL
         db_pg = QSqlDatabase.addDatabase("QPSQL", "pg_conn")
-        db_pg.setHostName(PG_HOST)
-        db_pg.setDatabaseName(PG_DB)
-        db_pg.setUserName(PG_USER)
-        db_pg.setPassword(PG_PASS)
+        db_pg.setHostName(PG_HOST); db_pg.setDatabaseName(PG_DB)
+        db_pg.setUserName(PG_USER); db_pg.setPassword(PG_PASS)
 
-        if not db_ms.open():
-            QMessageBox.critical(self, "Error", f"MySQL fail: {db_ms.lastError().text()}")
-            return False
-        if not db_pg.open():
-            QMessageBox.critical(self, "Error", f"PostgreSQL fail: {db_pg.lastError().text()}")
+        if not db_ms.open() or not db_pg.open():
+            QMessageBox.critical(self, "Error", "Connection failed")
             return False
         return True
 
