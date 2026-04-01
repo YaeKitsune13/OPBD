@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(splitter)
 
     def init_databases(self):
-        db_ms = QSqlDatabase.addDatabase("QMARIADB", "mysql_conn")
+        db_ms = QSqlDatabase.addDatabase("QMYSQL", "mysql_conn")
         db_ms.setHostName(MYSQL_HOST); db_ms.setDatabaseName(MYSQL_DB)
         db_ms.setUserName(MYSQL_USER); db_ms.setPassword(MYSQL_PASS)
 
