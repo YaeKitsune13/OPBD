@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ВетКлиника — Информационная система</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f11;
+    --surface: #16181c;
+    --surface2: #1c1f25;
+    --surface3: #22262e;
+    --border: #2a2e38;
+    --border2: #333844;
+    --text: #e8eaf0;
+    --text2: #9aa0b0;
+    --text3: #5c6270;
+    --accent: #4ade80;
+    --accent-dim: rgba(74,222,128,0.12);
+    --accent-glow: rgba(74,222,128,0.25);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --yellow: #fbbf24;
+    --yellow-dim: rgba(251,191,36,0.12);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.12);
+    --sidebar-w: 220px;
+    --topbar-h: 52px;
+    --radius: 6px;
+    --font: 'Onest', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: var(--topbar-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .topbar-sep { flex: 1; }
+
+  .role-switcher {
+    display: flex;
+    gap: 2px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3px;
+  }
+
+  .role-btn {
+    padding: 5px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .role-btn.active {
+    background: var(--surface3);
+    color: var(--text);
+    border: 1px solid var(--border2);
+  }
+
+  .role-btn:hover:not(.active) { color: var(--text); }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .topbar-user:hover { background: var(--surface2); }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .topbar-user-name { font-size: 13px; font-weight: 500; }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 18px;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-shrink: 0;
+    transition: transform 0.25s ease, width 0.25s ease;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .nav-section {
+    padding: 16px 0 4px;
+  }
+
+  .nav-section-label {
+    padding: 0 16px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.12s;
+    border-left: 2px solid transparent;
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .nav-item:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+
+  .nav-icon {
+    font-size: 15px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .nav-badge.green { background: var(--accent); color: #000; }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .main::-webkit-scrollbar { width: 6px; }
+  .main::-webkit-scrollbar-track { background: transparent; }
+  .main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── PAGE ── */
+  .page { display: none; flex-direction: column; gap: 20px; animation: fadeIn 0.2s ease; }
+  .page.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+  .page-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+
+  .btn-primary:hover { background: #22c55e; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border-color: var(--border2);
+  }
+
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .btn-danger {
+    background: var(--red-dim);
+    color: var(--red);
+    border-color: var(--red);
+  }
+
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .stat-card:hover { border-color: var(--border2); }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .stat-change {
+    font-size: 11px;
+    margin-top: 4px;
+    color: var(--text3);
+  }
+
+  .stat-change.up { color: var(--accent); }
+  .stat-change.down { color: var(--red); }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .card-body { padding: 16px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr {
+    transition: background 0.1s;
+    cursor: default;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  .td-main { color: var(--text); font-weight: 500; }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .badge-waiting { background: var(--yellow-dim); color: var(--yellow); }
+  .badge-confirmed { background: var(--accent-dim); color: var(--accent); }
+  .badge-rejected { background: var(--red-dim); color: var(--red); }
+  .badge-info { background: var(--blue-dim); color: var(--blue); }
+
+  /* ── FORM ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  select option { background: var(--surface3); }
+
+  .form-hint { font-size: 11px; color: var(--text3); }
+
+  /* ── GRID 2 ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  /* ── PET CARDS ── */
+  .pet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .pet-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pet-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.2s;
+  }
+
+  .pet-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .pet-card:hover::before { transform: scaleX(1); }
+
+  .pet-avatar {
+    width: 48px;
+    height: 48px;
+    background: var(--surface3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .pet-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .pet-meta { font-size: 12px; color: var(--text2); }
+  .pet-weight {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ── SCHEDULE ── */
+  .schedule-list { display: flex; flex-direction: column; gap: 1px; }
+
+  .schedule-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+
+  .schedule-item:hover { background: var(--surface2); }
+
+  .schedule-time {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    width: 44px;
+    flex-shrink: 0;
+  }
+
+  .schedule-info { flex: 1; min-width: 0; }
+  .schedule-name { font-size: 13px; font-weight: 500; }
+  .schedule-sub { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── WEIGHT CHART ── */
+  .chart-area {
+    height: 140px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-svg { width: 100%; height: 100%; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title { font-size: 15px; font-weight: 600; }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.1s;
+  }
+
+  .modal-close:hover { background: var(--surface2); color: var(--text); }
+
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    gap: 0;
+  }
+
+  .tab {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── VISIT CARD ── */
+  .visit-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .visit-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    background: var(--surface2);
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .visit-date { font-size: 12px; font-family: var(--mono); color: var(--text2); }
+  .visit-doctor { font-size: 12px; color: var(--text3); }
+  .visit-body { padding: 14px; }
+  .visit-diagnosis { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .visit-detail { font-size: 12px; color: var(--text2); }
+
+  /* ── EMPTY ── */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── TOAST ── */
+  .toast-area {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastIn 0.2s ease;
+    max-width: 280px;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .toast.success { border-left: 3px solid var(--accent); }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.info { border-left: 3px solid var(--blue); }
+
+  /* ── SIDEBAR OVERLAY (mobile) ── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    :root { --sidebar-w: 240px; }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: var(--topbar-h);
+      bottom: 0;
+      z-index: 100;
+      transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+    }
+
+    .sidebar-overlay.active { display: block; }
+
+    .hamburger { display: flex; }
+
+    .main { padding: 16px; }
+
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .role-switcher { gap: 0; }
+    .role-btn { padding: 5px 10px; }
+
+    .topbar-user-name { display: none; }
+
+    .page-header { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .pet-grid { grid-template-columns: 1fr 1fr; }
+    .btn { font-size: 12px; padding: 7px 12px; }
+  }
+
+  /* ── MISC ── */
+  .text-accent { color: var(--accent); }
+  .text-red { color: var(--red); }
+  .text-muted { color: var(--text2); }
+  .mono { font-family: var(--mono); }
+  .mt-4 { margin-top: 4px; }
+  .mt-8 { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+
+  hr.sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: var(--surface3);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Меню">☰</button>
+  <div class="logo">
+    <div class="logo-icon">🐾</div>
+    <span>ВетКлиника</span>
+  </div>
+  <div class="topbar-sep"></div>
+  <div class="role-switcher">
+    <button class="role-btn active" onclick="setRole('client', this)">Клиент</button>
+    <button class="role-btn" onclick="setRole('doctor', this)">Врач</button>
+    <button class="role-btn" onclick="setRole('admin', this)">Администрация</button>
+  </div>
+  <div class="topbar-user" onclick="showToast('Профиль', 'info')">
+    <div class="avatar" id="userAvatar">ИВ</div>
+    <span class="topbar-user-name" id="userName">Иванов И.И.</span>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR OVERLAY -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- CLIENT NAV -->
+    <div id="nav-client">
+      <div class="nav-section">
+        <div class="nav-section-label">Главное</div>
+        <div class="nav-item active" onclick="showPage('dashboard', this)">
+          <span class="nav-icon">⊞</span> Обзор
+        </div>
+        <div class="nav-item" onclick="showPage('pets', this)">
+          <span class="nav-icon">🐾</span> Мои питомцы
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Запись</div>
+        <div class="nav-item" onclick="showPage('appointments', this)">
+          <span class="nav-icon">📅</span> Записи на приём
+          <span class="nav-badge">2</span>
+        </div>
+        <div class="nav-item" onclick="showPage('book', this)">
+          <span class="nav-icon">✚</span> Записаться
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">История</div>
+        <div class="nav-item" onclick="showPage('history', this)">
+          <span class="nav-icon">📋</span> Журнал здоровья
+        </div>
+        <div class="nav-item" onclick="showPage('weight', this)">
+          <span class="nav-icon">📈</span> Динамика веса
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTOR NAV -->
+    <div id="nav-doctor" style="display:none">
+      <div class="nav-section">
+        <div class="nav-section-label">Приём</div>
+        <div class="nav-item active" onclick="showPage('today', this)">
+          <span class="nav-icon">📋</span> Расписание
+        </div>
+        <div class="nav-item" onclick="showPage('conduct', this)">
+          <span class="nav-icon">✏️</span> Ведение приёма
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Пациенты</div>
+        <div class="nav-item" onclick="showPage('search', this)">
+          <span class="nav-icon">🔍</span> Поиск пациента
+        </div>
+        <div class="nav-item" onclick="showPage('register-pet', this)">
+          <span class="nav-icon">✚</span> Быстрая регистрация
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN NAV -->
+    <div id="nav-admin" style="display:none">
+      <div class="nav-section">
+        <div class="nav-section-label">Аналитика</div>
+        <div class="nav-item active" onclick="showPage('analytics', this)">
+          <span class="nav-icon">📊</span> Сводка
+        </div>
+        <div class="nav-item" onclick="showPage('revenue', this)">
+          <span class="nav-icon">💰</span> Выручка
+        </div>
+        <div class="nav-item" onclick="showPage('load', this)">
+          <span class="nav-icon">👨‍⚕️</span> Нагрузка врачей
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Справочники</div>
+        <div class="nav-item" onclick="showPage('services', this)">
+          <span class="nav-icon">🔧</span> Услуги
+        </div>
+        <div class="nav-item" onclick="showPage('meds', this)">
+          <span class="nav-icon">💊</span> Медикаменты
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="main">
+
+    <!-- ══ CLIENT PAGES ══ -->
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Добрый день, Иван 👋</div>
+          <div class="page-sub">Сегодня, 28 апреля 2026</div>
+        </div>
+        <button class="btn btn-primary" onclick="showPage('book', document.querySelector('#nav-client .nav-item:nth-child(4)'))">✚ Записаться</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Питомцы</div>
+          <div class="stat-value text-accent">3</div>
+          <div class="stat-change">активных карточки</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Записи</div>
+          <div class="stat-value">2</div>
+          <div class="stat-change up">↑ ожидают подтверждения</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Визитов</div>
+          <div class="stat-value">12</div>
+          <div class="stat-change">за всё время</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Следующий приём</div>
+          <div class="stat-value mono" style="font-size:18px">02 мая</div>
+          <div class="stat-change">Барсик · 10:30</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Последние записи</span>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('appointments', null)">Все →</button>
+          </div>
+          <div class="schedule-list">
+            <div class="schedule-item">
+              <div class="schedule-time">02 мая</div>
+              <div class="schedule-info">
+                <div class="schedule-name">Барсик — Терапевт Кузнецов</div>
+                <div class="schedule-sub">10:30 · Плановый осмотр</div>
+              </div>
+              <span class="badge badge-waiting">Ожидание</span>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">10 мая</div>
+              <div class="schedule-info">
+                <div class="schedule-name">Рыжик — Хирург Попова</div>
+                <div class="schedule-sub">14:00 · Консультация</div>
+              </div>
+              <span class="badge badge-confirmed">Подтверждено</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Мои питомцы</span>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('pets', null)">Все →</button>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+            <div class="row">
+              <div class="pet-avatar" style="width:36px;height:36px;font-size:18px;border-radius:6px">🐱</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">Барсик</div>
+                <div style="font-size:12px;color:var(--text2)">Кот · Британец · 4.2 кг</div>
+              </div>
+              <span class="tag">5 лет</span>
+            </div>
+            <div class="row">
+              <div class="pet-avatar" style="width:36px;height:36px;font-size:18px;border-radius:6px">🐶</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">Рыжик</div>
+                <div style="font-size:12px;color:var(--text2)">Пёс · Лабрадор · 28.5 кг</div>
+              </div>
+              <span class="tag">3 года</span>
+            </div>
+            <div class="row">
+              <div class="pet-avatar" style="width:36px;height:36px;font-size:18px;border-radius:6px">🐇</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">Снежок</div>
+                <div style="font-size:12px;color:var(--text2)">Кролик · Вислоухий · 2.1 кг</div>
+              </div>
+              <span class="tag">2 года</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PETS -->
+    <div class="page" id="page-pets">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Мои питомцы</div>
+          <div class="page-sub">Карточки и медицинская информация</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addPetModal')">✚ Добавить питомца</button>
+      </div>
+
+      <div class="pet-grid">
+        <div class="pet-card" onclick="showToast('Карточка Барсика', 'info')">
+          <div class="pet-avatar">🐱</div>
+          <div class="pet-name">Барсик</div>
+          <div class="pet-meta">Кот · Британец</div>
+          <div class="pet-meta mt-4">Дата рождения: 15.03.2021</div>
+          <div class="pet-weight">⚖️ 4.2 кг</div>
+        </div>
+        <div class="pet-card" onclick="showToast('Карточка Рыжика', 'info')">
+          <div class="pet-avatar">🐶</div>
+          <div class="pet-name">Рыжик</div>
+          <div class="pet-meta">Пёс · Лабрадор</div>
+          <div class="pet-meta mt-4">Дата рождения: 08.11.2023</div>
+          <div class="pet-weight">⚖️ 28.5 кг</div>
+        </div>
+        <div class="pet-card" onclick="showToast('Карточка Снежка', 'info')">
+          <div class="pet-avatar">🐇</div>
+          <div class="pet-name">Снежок</div>
+          <div class="pet-meta">Кролик · Вислоухий</div>
+          <div class="pet-meta mt-4">Дата рождения: 20.06.2024</div>
+          <div class="pet-weight">⚖️ 2.1 кг</div>
+        </div>
+        <div class="pet-card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;gap:8px;color:var(--text3)" onclick="openModal('addPetModal')">
+          <div style="font-size:24px">+</div>
+          <div style="font-size:12px">Добавить питомца</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="page" id="page-appointments">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Записи на приём</div>
+          <div class="page-sub">Статусы и история заявок</div>
+        </div>
+        <button class="btn btn-primary" onclick="showPage('book', null)">✚ Новая запись</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Активные заявки</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>№</th><th>Питомец</th><th>Врач</th><th>Дата и время</th><th>Статус</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono text-muted">#1042</td>
+                <td class="td-main">🐱 Барсик</td>
+                <td>Кузнецов А.В. · Терапевт</td>
+                <td class="mono">02.05.2026 · 10:30</td>
+                <td><span class="badge badge-waiting">Ожидание</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="showToast('Запись отменена', 'error')">Отменить</button></td>
+              </tr>
+              <tr>
+                <td class="mono text-muted">#1038</td>
+                <td class="td-main">🐶 Рыжик</td>
+                <td>Попова М.С. · Хирург</td>
+                <td class="mono">10.05.2026 · 14:00</td>
+                <td><span class="badge badge-confirmed">Подтверждено</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="showToast('Нельзя отменить', 'error')">Отменить</button></td>
+              </tr>
+              <tr>
+                <td class="mono text-muted">#1021</td>
+                <td class="td-main">🐱 Барсик</td>
+                <td>Кузнецов А.В. · Терапевт</td>
+                <td class="mono">10.04.2026 · 11:00</td>
+                <td><span class="badge badge-rejected">Отклонено</span></td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOK -->
+    <div class="page" id="page-book">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Записаться на приём</div>
+          <div class="page-sub">Выберите питомца, врача и удобное время</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Питомец</label>
+              <select>
+                <option>🐱 Барсик</option>
+                <option>🐶 Рыжик</option>
+                <option>🐇 Снежок</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Специализация</label>
+              <select id="specSelect" onchange="updateDoctors()">
+                <option value="">— Выберите —</option>
+                <option value="therapist">Терапевт</option>
+                <option value="surgeon">Хирург</option>
+                <option value="cardio">Кардиолог</option>
+                <option value="neuro">Невролог</option>
+                <option value="derm">Дерматолог</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Врач</label>
+              <select id="doctorSelect">
+                <option>— Сначала выберите специализацию —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Дата приёма</label>
+              <input type="date" min="2026-04-29" value="2026-05-02">
+            </div>
+            <div class="form-group">
+              <label>Время</label>
+              <select>
+                <option>09:00</option><option>09:30</option><option>10:00</option>
+                <option>10:30</option><option>11:00</option><option>11:30</option>
+                <option>14:00</option><option>14:30</option><option>15:00</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Комментарий (необязательно)</label>
+              <textarea placeholder="Опишите проблему или цель визита..."></textarea>
+            </div>
+          </div>
+          <div class="mt-12">
+            <button class="btn btn-primary" onclick="showToast('Заявка отправлена! Ожидайте подтверждения.', 'success')">Отправить заявку</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Журнал здоровья</div>
+          <div class="page-sub">История визитов и диагнозов</div>
+        </div>
+        <select style="width:auto;padding:7px 12px;font-size:13px">
+          <option>🐱 Барсик</option>
+          <option>🐶 Рыжик</option>
+          <option>🐇 Снежок</option>
+        </select>
+      </div>
+
+      <div class="visit-item">
+        <div class="visit-head">
+          <div>
+            <span class="visit-date">10.04.2026 · 11:00</span>
+            <span class="visit-doctor"> · Кузнецов А.В.</span>
+          </div>
+          <span class="badge badge-confirmed">Завершён</span>
+        </div>
+        <div class="visit-body">
+          <div class="visit-diagnosis">🔬 ОРВИ у кошек (ринотрахеит)</div>
+          <div class="visit-detail">Назначено: Амоксициллин × 1, Осмотр × 1</div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text3)">Итого: 1 850 руб.</div>
+        </div>
+      </div>
+
+      <div class="visit-item">
+        <div class="visit-head">
+          <div>
+            <span class="visit-date">15.02.2026 · 09:30</span>
+            <span class="visit-doctor"> · Попова М.С.</span>
+          </div>
+          <span class="badge badge-confirmed">Завершён</span>
+        </div>
+        <div class="visit-body">
+          <div class="visit-diagnosis">💉 Плановая вакцинация</div>
+          <div class="visit-detail">Назначено: Вакцинация × 1</div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text3)">Итого: 850 руб.</div>
+        </div>
+      </div>
+
+      <div class="visit-item">
+        <div class="visit-head">
+          <div>
+            <span class="visit-date">03.11.2025 · 15:00</span>
+            <span class="visit-doctor"> · Кузнецов А.В.</span>
+          </div>
+          <span class="badge badge-confirmed">Завершён</span>
+        </div>
+        <div class="visit-body">
+          <div class="visit-diagnosis">🩺 Отит наружный</div>
+          <div class="visit-detail">Назначено: Отипакс × 2, Осмотр × 1</div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text3)">Итого: 1 200 руб.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEIGHT -->
+    <div class="page" id="page-weight">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Динамика веса</div>
+          <div class="page-sub">График изменения веса питомца</div>
+        </div>
+        <select style="width:auto;padding:7px 12px;font-size:13px">
+          <option>🐱 Барсик</option>
+          <option>🐶 Рыжик</option>
+          <option>🐇 Снежок</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Барсик — История веса</span>
+          <div class="row">
+            <span style="font-size:12px;color:var(--text2)">Начало: <b class="text-accent">3.8 кг</b></span>
+            <span style="font-size:12px;color:var(--text2)">Сейчас: <b class="text-accent">4.2 кг</b></span>
+            <span class="badge badge-confirmed">+0.4 кг</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-area">
+            <svg class="chart-svg" viewBox="0 0 500 130" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#4ade80" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- grid lines -->
+              <line x1="0" y1="30" x2="500" y2="30" stroke="#2a2e38" stroke-width="1"/>
+              <line x1="0" y1="65" x2="500" y2="65" stroke="#2a2e38" stroke-width="1"/>
+              <line x1="0" y1="100" x2="500" y2="100" stroke="#2a2e38" stroke-width="1"/>
+              <!-- labels -->
+              <text x="2" y="28" font-size="9" fill="#5c6270" font-family="JetBrains Mono">4.5</text>
+              <text x="2" y="63" font-size="9" fill="#5c6270" font-family="JetBrains Mono">4.1</text>
+              <text x="2" y="98" font-size="9" fill="#5c6270" font-family="JetBrains Mono">3.7</text>
+              <!-- area -->
+              <path d="M40,95 L120,85 L200,90 L280,75 L360,60 L460,48 L460,115 L40,115 Z" fill="url(#wGrad)"/>
+              <!-- line -->
+              <polyline points="40,95 120,85 200,90 280,75 360,60 460,48" fill="none" stroke="#4ade80" stroke-width="2" stroke-linejoin="round"/>
+              <!-- dots -->
+              <circle cx="40" cy="95" r="4" fill="#4ade80"/>
+              <circle cx="120" cy="85" r="4" fill="#4ade80"/>
+              <circle cx="200" cy="90" r="4" fill="#4ade80"/>
+              <circle cx="280" cy="75" r="4" fill="#4ade80"/>
+              <circle cx="360" cy="60" r="4" fill="#4ade80"/>
+              <circle cx="460" cy="48" r="4" fill="#4ade80"/>
+              <!-- x labels -->
+              <text x="30" y="128" font-size="9" fill="#5c6270" font-family="JetBrains Mono">ноя</text>
+              <text x="108" y="128" font-size="9" fill="#5c6270" font-family="JetBrains Mono">дек</text>
+              <text x="188" y="128" font-size="9" fill="#5c6270" font-family="JetBrains Mono">янв</text>
+              <text x="268" y="128" font-size="9" fill="#5c6270" font-family="JetBrains Mono">фев</text>
+              <text x="348" y="128" font-size="9" fill="#5c6270" font-family="JetBrains Mono">мар</text>
+              <text x="448" y="128" font-size="9" fill="#5c6270" font-family="JetBrains Mono">апр</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Таблица измерений</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Дата</th><th>Вес (кг)</th><th>Изменение</th><th>Врач</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">10.04.2026</td><td class="td-main mono">4.20</td><td class="text-accent">+0.20</td><td>Кузнецов А.В.</td></tr>
+              <tr><td class="mono">15.02.2026</td><td class="td-main mono">4.00</td><td class="text-accent">+0.20</td><td>Попова М.С.</td></tr>
+              <tr><td class="mono">10.01.2026</td><td class="td-main mono">3.80</td><td class="text-muted">—</td><td>Кузнецов А.В.</td></tr>
+              <tr><td class="mono">03.11.2025</td><td class="td-main mono">3.85</td><td class="text-red">+0.05</td><td>Кузнецов А.В.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DOCTOR PAGES ══ -->
+
+    <!-- TODAY -->
+    <div class="page" id="page-today">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Расписание на сегодня</div>
+          <div class="page-sub">28 апреля 2026 · Кузнецов Андрей Владимирович</div>
+        </div>
+        <div class="row">
+          <span class="badge badge-info">4 записи</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="schedule-list" style="padding:8px">
+          <div class="schedule-item">
+            <div class="schedule-time">09:00</div>
+            <div class="schedule-info">
+              <div class="schedule-name">🐱 Барсик — Иванов И.И.</div>
+              <div class="schedule-sub">Кот · Британец · Плановый осмотр</div>
+            </div>
+            <span class="badge badge-confirmed">Подтверждено</span>
+            <button class="btn btn-primary btn-sm" onclick="showPage('conduct', null)">Принять</button>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">10:30</div>
+            <div class="schedule-info">
+              <div class="schedule-name">🐶 Мухтар — Петров С.Р.</div>
+              <div class="schedule-sub">Пёс · Немецкая овчарка · Вакцинация</div>
+            </div>
+            <span class="badge badge-waiting">Ожидание</span>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-sm" style="background:var(--accent-dim);color:var(--accent);border-color:var(--accent)" onclick="showToast('Подтверждено', 'success')">✓</button>
+              <button class="btn btn-sm" style="background:var(--red-dim);color:var(--red);border-color:var(--red)" onclick="showToast('Отклонено', 'error')">✗</button>
+            </div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">12:00</div>
+            <div class="schedule-info">
+              <div class="schedule-name">🐇 Пуговка — Сидорова О.А.</div>
+              <div class="schedule-sub">Кролик · Декоративный · Осмотр</div>
+            </div>
+            <span class="badge badge-confirmed">Подтверждено</span>
+            <button class="btn btn-primary btn-sm" onclick="showToast('Открыт приём', 'info')">Принять</button>
+          </div>
+          <div class="schedule-item" style="opacity:0.5">
+            <div class="schedule-time">15:00</div>
+            <div class="schedule-info">
+              <div class="schedule-name">🐱 Луна — Козлов В.Н.</div>
+              <div class="schedule-sub">Кошка · Мейн-кун · Дерматит</div>
+            </div>
+            <span class="badge badge-waiting">Ожидание</span>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-sm" style="background:var(--accent-dim);color:var(--accent);border-color:var(--accent)" onclick="showToast('Подтверждено', 'success')">✓</button>
+              <button class="btn btn-sm" style="background:var(--red-dim);color:var(--red);border-color:var(--red)" onclick="showToast('Отклонено', 'error')">✗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONDUCT -->
+    <div class="page" id="page-conduct">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Ведение приёма</div>
+          <div class="page-sub">🐱 Барсик · Иванов И.И. · 28.04.2026 09:00</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Информация о питомце</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+            <div class="row-between"><span class="text-muted" style="font-size:12px">Кличка</span><span>Барсик</span></div>
+            <div class="row-between"><span class="text-muted" style="font-size:12px">Вид / Порода</span><span>Кот / Британец</span></div>
+            <div class="row-between"><span class="text-muted" style="font-size:12px">Дата рождения</span><span class="mono">15.03.2021</span></div>
+            <div class="row-between"><span class="text-muted" style="font-size:12px">Последний вес</span><span class="text-accent">4.20 кг</span></div>
+            <div class="row-between"><span class="text-muted" style="font-size:12px">Владелец</span><span>Иванов И.И.</span></div>
+            <hr class="sep">
+            <div class="form-group">
+              <label>Вес на приёме (кг)</label>
+              <input type="number" step="0.1" min="0.1" max="300" value="4.20">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Медицинская карта</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+            <div class="form-group">
+              <label>Анамнез <span style="color:var(--red)">*</span></label>
+              <textarea rows="3" placeholder="Жалобы, предыстория... (10–2000 символов)">Владелец отмечает снижение аппетита в течение 3 дней, чихание.</textarea>
+            </div>
+            <div class="form-group">
+              <label>Диагноз <span style="color:var(--red)">*</span></label>
+              <input type="text" value="ОРВИ, ринотрахеит кошек">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Назначения</span>
+          <div class="row">
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Услуга добавлена', 'success')">+ Услуга</button>
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Медикамент добавлен', 'success')">+ Медикамент</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Наименование</th><th>Тип</th><th>Кол-во</th><th>Стоимость</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="td-main">Первичный осмотр</td>
+                <td><span class="badge badge-info">Услуга</span></td>
+                <td class="mono">1</td>
+                <td class="mono">850 руб.</td>
+                <td><button class="btn btn-ghost btn-sm" onclick="showToast('Удалено', 'error')">✕</button></td>
+              </tr>
+              <tr>
+                <td class="td-main">Амоксициллин 50мг</td>
+                <td><span class="badge" style="background:var(--yellow-dim);color:var(--yellow)">Медикамент</span></td>
+                <td class="mono">1</td>
+                <td class="mono">320 руб.</td>
+                <td><button class="btn btn-ghost btn-sm" onclick="showToast('Удалено', 'error')">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--text2)">Итоговая стоимость (автоматически)</span>
+          <span style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--accent)">1 170 руб.</span>
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;gap:8px">
+        <button class="btn btn-ghost" onclick="showPage('today', null)">Отмена</button>
+        <button class="btn btn-primary" onclick="showToast('Медкарта сохранена!', 'success')">Сохранить карту</button>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="page" id="page-search">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Поиск пациента</div>
+          <div class="page-sub">История болезней любого питомца</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="row" style="gap:8px">
+            <input type="text" placeholder="Кличка питомца или ФИО владельца..." style="flex:1" value="Барсик">
+            <button class="btn btn-primary" onclick="showToast('Поиск выполнен', 'info')">Найти</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Результат: Барсик · Иванов И.И.</span></div>
+        <div style="padding:14px;border-bottom:1px solid var(--border)">
+          <div class="row" style="gap:12px">
+            <div class="pet-avatar">🐱</div>
+            <div>
+              <div style="font-weight:600">Барсик</div>
+              <div style="font-size:12px;color:var(--text2)">Кот · Британец · 4.2 кг · 5 лет</div>
+              <div style="font-size:12px;color:var(--text3)">Владелец: Иванов Иван Иванович · +79001234567</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px">
+          <div class="visit-item" style="margin-bottom:0">
+            <div class="visit-head">
+              <div><span class="visit-date">10.04.2026</span><span class="visit-doctor"> · Кузнецов А.В.</span></div>
+              <span class="badge badge-confirmed">Завершён</span>
+            </div>
+            <div class="visit-body">
+              <div class="visit-diagnosis">🔬 ОРВИ (ринотрахеит)</div>
+              <div class="visit-detail">Осмотр × 1, Амоксициллин × 1 → 1 850 руб.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTER PET -->
+    <div class="page" id="page-register-pet">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Быстрая регистрация питомца</div>
+          <div class="page-sub">Добавить нового питомца прямо во время приёма</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>ФИО владельца</label>
+              <input type="text" placeholder="Петров Сергей Романович">
+            </div>
+            <div class="form-group">
+              <label>Телефон</label>
+              <input type="text" placeholder="+79001234567">
+            </div>
+            <div class="form-group">
+              <label>Кличка питомца <span style="color:var(--red)">*</span></label>
+              <input type="text" placeholder="Только буквы">
+            </div>
+            <div class="form-group">
+              <label>Вид животного</label>
+              <select>
+                <option>Кошка</option><option>Собака</option><option>Кролик</option>
+                <option>Птица</option><option>Грызун</option><option>Другое</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Порода</label>
+              <input type="text" placeholder="Порода или «беспородная»">
+            </div>
+            <div class="form-group">
+              <label>Дата рождения</label>
+              <input type="date">
+            </div>
+            <div class="form-group">
+              <label>Текущий вес (кг)</label>
+              <input type="number" step="0.1" min="0.1" max="300" placeholder="0.1–300">
+            </div>
+          </div>
+          <div class="mt-12">
+            <button class="btn btn-primary" onclick="showToast('Питомец зарегистрирован!', 'success')">Зарегистрировать</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN PAGES ══ -->
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Аналитическая сводка</div>
+          <div class="page-sub">Апрель 2026</div>
+        </div>
+        <button class="btn btn-ghost" onclick="showToast('Отчёт выгружен', 'success')">⬇ Экспорт</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Визитов за месяц</div>
+          <div class="stat-value text-accent">147</div>
+          <div class="stat-change up">↑ +18 vs март</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Выручка</div>
+          <div class="stat-value mono" style="font-size:20px">248k</div>
+          <div class="stat-change up">↑ +12%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Активных клиентов</div>
+          <div class="stat-value">89</div>
+          <div class="stat-change up">↑ +5</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ср. чек</div>
+          <div class="stat-value mono" style="font-size:20px">1 687</div>
+          <div class="stat-change">руб.</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Популярные услуги</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Услуга</th><th>Раз</th><th>Выручка</th></tr></thead>
+              <tbody>
+                <tr><td class="td-main">Первичный осмотр</td><td class="mono">68</td><td class="mono text-accent">57 800 руб.</td></tr>
+                <tr><td class="td-main">Вакцинация</td><td class="mono">41</td><td class="mono text-accent">34 850 руб.</td></tr>
+                <tr><td class="td-main">УЗИ брюшной полости</td><td class="mono">22</td><td class="mono text-accent">33 000 руб.</td></tr>
+                <tr><td class="td-main">Анализ крови</td><td class="mono">19</td><td class="mono text-accent">19 000 руб.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Нагрузка врачей</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Врач</th><th>Приёмов</th><th>Статус</th></tr></thead>
+              <tbody>
+                <tr><td class="td-main">Кузнецов А.В.</td><td class="mono">52</td><td><span class="badge badge-confirmed">Высокая</span></td></tr>
+                <tr><td class="td-main">Попова М.С.</td><td class="mono">38</td><td><span class="badge badge-waiting">Средняя</span></td></tr>
+                <tr><td class="td-main">Ломов Д.Е.</td><td class="mono">31</td><td><span class="badge badge-waiting">Средняя</span></td></tr>
+                <tr><td class="td-main">Крылова Н.А.</td><td class="mono">26</td><td><span class="badge badge-info">Низкая</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVENUE -->
+    <div class="page" id="page-revenue">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Выручка</div>
+          <div class="page-sub">Финансовые отчёты по периодам</div>
+        </div>
+        <div class="row">
+          <input type="date" value="2026-04-01" style="width:auto">
+          <input type="date" value="2026-04-28" style="width:auto">
+          <button class="btn btn-primary" onclick="showToast('Отчёт сформирован', 'success')">Сформировать</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Итого за период</div><div class="stat-value mono" style="font-size:22px">248 460</div><div class="stat-change">руб.</div></div>
+        <div class="stat-card"><div class="stat-label">Услуги</div><div class="stat-value mono" style="font-size:22px">164 200</div><div class="stat-change up">66% от выручки</div></div>
+        <div class="stat-card"><div class="stat-label">Медикаменты</div><div class="stat-value mono" style="font-size:22px">84 260</div><div class="stat-change">34% от выручки</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">По дням</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Дата</th><th>Визитов</th><th>Услуги</th><th>Медикаменты</th><th>Итого</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">28.04.2026</td><td>8</td><td>9 400 руб.</td><td>3 200 руб.</td><td class="mono text-accent">12 600 руб.</td></tr>
+              <tr><td class="mono">27.04.2026</td><td>6</td><td>7 100 руб.</td><td>2 850 руб.</td><td class="mono text-accent">9 950 руб.</td></tr>
+              <tr><td class="mono">26.04.2026</td><td>5</td><td>5 800 руб.</td><td>1 900 руб.</td><td class="mono text-accent">7 700 руб.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOAD -->
+    <div class="page" id="page-load">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Нагрузка врачей</div>
+          <div class="page-sub">Статистика приёмов по специалистам</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Врач</th><th>Специализация</th><th>Приёмов</th><th>% нагрузки</th><th>Выручка</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="td-main">Кузнецов А.В.</td><td>Терапевт</td><td class="mono">52</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;height:4px;background:var(--surface3);border-radius:2px;min-width:60px">
+                      <div style="width:71%;height:100%;background:var(--accent);border-radius:2px"></div>
+                    </div>
+                    <span class="mono" style="font-size:11px">71%</span>
+                  </div>
+                </td>
+                <td class="mono text-accent">94 500 руб.</td>
+              </tr>
+              <tr>
+                <td class="td-main">Попова М.С.</td><td>Хирург</td><td class="mono">38</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;height:4px;background:var(--surface3);border-radius:2px;min-width:60px">
+                      <div style="width:52%;height:100%;background:var(--yellow);border-radius:2px"></div>
+                    </div>
+                    <span class="mono" style="font-size:11px">52%</span>
+                  </div>
+                </td>
+                <td class="mono text-accent">72 300 руб.</td>
+              </tr>
+              <tr>
+                <td class="td-main">Ломов Д.Е.</td><td>Кардиолог</td><td class="mono">31</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;height:4px;background:var(--surface3);border-radius:2px;min-width:60px">
+                      <div style="width:42%;height:100%;background:var(--yellow);border-radius:2px"></div>
+                    </div>
+                    <span class="mono" style="font-size:11px">42%</span>
+                  </div>
+                </td>
+                <td class="mono text-accent">48 200 руб.</td>
+              </tr>
+              <tr>
+                <td class="td-main">Крылова Н.А.</td><td>Дерматолог</td><td class="mono">26</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;height:4px;background:var(--surface3);border-radius:2px;min-width:60px">
+                      <div style="width:36%;height:100%;background:var(--blue);border-radius:2px"></div>
+                    </div>
+                    <span class="mono" style="font-size:11px">36%</span>
+                  </div>
+                </td>
+                <td class="mono text-accent">33 460 руб.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="page" id="page-services">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Справочник услуг</div>
+          <div class="page-sub">Управление каталогом процедур и ценами</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addServiceModal')">✚ Добавить услугу</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <input type="text" placeholder="Поиск по услугам..." style="width:220px">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Наименование</th><th>Описание</th><th>Стоимость</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono text-muted">001</td><td class="td-main">Первичный осмотр</td><td class="text-muted" style="max-width:200px;font-size:12px">Общий клинический осмотр животного</td><td class="mono">850 руб.</td><td><button class="btn btn-ghost btn-sm" onclick="showToast('Редактирование', 'info')">✏</button></td></tr>
+              <tr><td class="mono text-muted">002</td><td class="td-main">Вакцинация</td><td class="text-muted" style="max-width:200px;font-size:12px">Введение вакцины, комплексная защита</td><td class="mono">850 руб.</td><td><button class="btn btn-ghost btn-sm" onclick="showToast('Редактирование', 'info')">✏</button></td></tr>
+              <tr><td class="mono text-muted">003</td><td class="td-main">УЗИ брюшной полости</td><td class="text-muted" style="max-width:200px;font-size:12px">Ультразвуковая диагностика органов</td><td class="mono">1 500 руб.</td><td><button class="btn btn-ghost btn-sm" onclick="showToast('Редактирование', 'info')">✏</button></td></tr>
+              <tr><td class="mono text-muted">004</td><td class="td-main">Анализ крови (общий)</td><td class="text-muted" style="max-width:200px;font-size:12px">Клинический анализ крови</td><td class="mono">1 000 руб.</td><td><button class="btn btn-ghost btn-sm" onclick="showToast('Редактирование', 'info')">✏</button></td></tr>
+              <tr><td class="mono text-muted">005</td><td class="td-main">Хирургическая операция</td><td class="text-muted" style="max-width:200px;font-size:12px">Плановые и экстренные операции</td><td class="mono">8 000 руб.</td><td><button class="btn btn-ghost btn-sm" onclick="showToast('Редактирование', 'info')">✏</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDS -->
+    <div class="page" id="page-meds">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Справочник медикаментов</div>
+          <div class="page-sub">Управление препаратами</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addMedModal')">✚ Добавить</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <input type="text" placeholder="Поиск по медикаментам..." style="width:220px">
+          <button class="btn btn-danger btn-sm" onclick="showToast('Начато списание', 'error')">Списать просроченные</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Название</th><th>Описание</th><th>Цена / ед.</th><th>Срок годности</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono text-muted">M001</td><td class="td-main">Амоксициллин 50мг</td><td class="text-muted" style="font-size:12px">Антибиотик широкого спектра</td><td class="mono">320 руб.</td><td class="mono">12.2027</td><td><button class="btn btn-ghost btn-sm">✏</button></td></tr>
+              <tr><td class="mono text-muted">M002</td><td class="td-main">Отипакс</td><td class="text-muted" style="font-size:12px">Ушные капли</td><td class="mono">480 руб.</td><td class="mono">06.2026</td><td><button class="btn btn-ghost btn-sm">✏</button></td></tr>
+              <tr style="background:var(--red-dim)"><td class="mono text-muted">M003</td><td class="td-main text-red">Нафтизин</td><td class="text-muted" style="font-size:12px">Сосудосуживающее</td><td class="mono">120 руб.</td><td class="mono text-red">01.2026 ⚠</td><td><button class="btn btn-danger btn-sm">Списать</button></td></tr>
+              <tr><td class="mono text-muted">M004</td><td class="td-main">Новокаин 0.5%</td><td class="text-muted" style="font-size:12px">Местная анестезия</td><td class="mono">95 руб.</td><td class="mono">08.2027</td><td><button class="btn btn-ghost btn-sm">✏</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- Add Pet Modal -->
+<div class="modal-overlay" id="addPetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Добавить питомца</span>
+      <button class="modal-close" onclick="closeModal('addPetModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Кличка <span style="color:var(--red)">*</span></label>
+          <input type="text" placeholder="Только буквы">
+          <span class="form-hint">От 1 до 30 символов, только буквы</span>
+        </div>
+        <div class="form-group">
+          <label>Вид животного</label>
+          <select>
+            <option>Кошка</option><option>Собака</option><option>Кролик</option>
+            <option>Птица</option><option>Грызун</option><option>Другое</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Порода</label>
+          <input type="text" placeholder="Порода или «беспородная»">
+        </div>
+        <div class="form-group">
+          <label>Дата рождения <span style="color:var(--red)">*</span></label>
+          <input type="date">
+        </div>
+        <div class="form-group">
+          <label>Вес (кг) <span style="color:var(--red)">*</span></label>
+          <input type="number" step="0.1" min="0.1" max="300" placeholder="0.1–300">
+        </div>
+        <div class="form-group">
+          <label>Фото (JPG / PNG до 5 МБ)</label>
+          <input type="file" accept=".jpg,.png">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addPetModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="closeModal('addPetModal');showToast('Питомец добавлен!', 'success')">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal-overlay" id="addServiceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Добавить услугу</span>
+      <button class="modal-close" onclick="closeModal('addServiceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Наименование <span style="color:var(--red)">*</span></label>
+        <input type="text" placeholder="Название услуги">
+      </div>
+      <div class="form-group">
+        <label>Описание</label>
+        <textarea placeholder="Описание процедуры..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Стоимость (руб.) <span style="color:var(--red)">*</span></label>
+        <input type="number" min="1" placeholder="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addServiceModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="closeModal('addServiceModal');showToast('Услуга добавлена!', 'success')">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Med Modal -->
+<div class="modal-overlay" id="addMedModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Добавить медикамент</span>
+      <button class="modal-close" onclick="closeModal('addMedModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Название <span style="color:var(--red)">*</span></label>
+        <input type="text" placeholder="Название препарата">
+      </div>
+      <div class="form-group">
+        <label>Описание</label>
+        <textarea placeholder="Описание, показания..."></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Цена за единицу (руб.) <span style="color:var(--red)">*</span></label>
+          <input type="number" min="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Срок годности</label>
+          <input type="month">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addMedModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="closeModal('addMedModal');showToast('Медикамент добавлен!', 'success')">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST AREA -->
+<div class="toast-area" id="toastArea"></div>
+
+<script>
+  // ── STATE ──
+  let currentRole = 'client';
+
+  const roleConfig = {
+    client: {
+      nav: 'nav-client',
+      firstPage: 'dashboard',
+      user: { avatar: 'ИВ', name: 'Иванов И.И.' }
+    },
+    doctor: {
+      nav: 'nav-doctor',
+      firstPage: 'today',
+      user: { avatar: 'КА', name: 'Кузнецов А.В.' }
+    },
+    admin: {
+      nav: 'nav-admin',
+      firstPage: 'analytics',
+      user: { avatar: 'АД', name: 'Администратор' }
+    }
+  };
+
+  // ── ROLE SWITCHING ──
+  function setRole(role, btn) {
+    currentRole = role;
+
+    // update role buttons
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // show/hide nav sections
+    Object.keys(roleConfig).forEach(r => {
+      const el = document.getElementById('nav-' + r);
+      if (el) el.style.display = r === role ? 'block' : 'none';
+    });
+
+    // update user info
+    const cfg = roleConfig[role];
+    document.getElementById('userAvatar').textContent = cfg.user.avatar;
+    document.getElementById('userName').textContent = cfg.user.name;
+
+    // clear all nav active states
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+    // navigate to first page
+    const firstNavItem = document.querySelector('#nav-' + role + ' .nav-item');
+    if (firstNavItem) firstNavItem.classList.add('active');
+    showPage(cfg.firstPage, null);
+
+    closeSidebar();
+  }
+
+  // ── PAGE NAVIGATION ──
+  function showPage(pageId, navItem) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const page = document.getElementById('page-' + pageId);
+    if (page) page.classList.add('active');
+
+    if (navItem) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      navItem.classList.add('active');
+    }
+
+    // scroll main to top
+    document.getElementById('main').scrollTop = 0;
+    closeSidebar();
+  }
+
+  // ── SIDEBAR MOBILE ──
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  }
+
+  // ── MODALS ──
+  function openModal(id) {
+    document.getElementById(id).classList.add('active');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  // close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('active');
+    });
+  });
+
+  // ── TOAST ──
+  function showToast(message, type = 'info') {
+    const area = document.getElementById('toastArea');
+    const icons = { success: '✓', error: '✕', info: 'ℹ' };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+    area.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(20px)';
+      toast.style.transition = 'all 0.2s';
+      setTimeout(() => toast.remove(), 200);
+    }, 2800);
+  }
+
+  // ── BOOKING: update doctors by specialty ──
+  const doctors = {
+    therapist: ['Кузнецов А.В.', 'Ломов Д.Е.'],
+    surgeon: ['Попова М.С.'],
+    cardio: ['Ломов Д.Е.'],
+    neuro: ['Крылова Н.А.'],
+    derm: ['Крылова Н.А.', 'Кузнецов А.В.'],
+  };
+
+  function updateDoctors() {
+    const spec = document.getElementById('specSelect').value;
+    const sel = document.getElementById('doctorSelect');
+    sel.innerHTML = '';
+    if (!spec || !doctors[spec]) {
+      sel.innerHTML = '<option>— Выберите специализацию —</option>';
+      return;
+    }
+    doctors[spec].forEach(d => {
+      const opt = document.createElement('option');
+      opt.textContent = d;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ── KEYBOARD ESC ──
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+      closeSidebar();
+    }
+  });
+</script>
+</body>
+</html>
