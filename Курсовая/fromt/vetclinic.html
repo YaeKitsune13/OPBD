@@ -1448,6 +1448,250 @@
                 color: var(--text2);
                 border: 1px solid var(--border);
             }
+
+            /* ── PRINT PREVIEW MODAL ── */
+            #printModal .modal {
+                max-width: 640px;
+            }
+            .print-option-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .print-option-card {
+                border: 1px solid var(--border2);
+                border-radius: var(--radius);
+                padding: 18px 16px;
+                cursor: pointer;
+                text-align: center;
+                transition: all 0.15s;
+                background: var(--surface2);
+            }
+            .print-option-card:hover {
+                border-color: var(--accent);
+                background: var(--accent-dim);
+            }
+            .print-option-card .poi {
+                font-size: 28px;
+                margin-bottom: 8px;
+            }
+            .print-option-card .pot {
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 4px;
+            }
+            .print-option-card .pod {
+                font-size: 11px;
+                color: var(--text3);
+            }
+
+            /* ── @media print ── */
+            @media print {
+                /* hide everything except the print content */
+                body > *:not(#printRoot) {
+                    display: none !important;
+                }
+                #printRoot {
+                    display: block !important;
+                }
+
+                /* page settings */
+                @page {
+                    size: A4;
+                    margin: 18mm 15mm 20mm;
+                }
+
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+
+                #printRoot {
+                    font-family: "Onest", "Segoe UI", Arial, sans-serif;
+                    font-size: 11pt;
+                    color: #1a1a1a;
+                    background: #fff;
+                    width: 100%;
+                }
+
+                /* clinic header */
+                .pr-header {
+                    text-align: center;
+                    border-bottom: 2px solid #1a1a1a;
+                    padding-bottom: 12px;
+                    margin-bottom: 14px;
+                }
+                .pr-clinic-name {
+                    font-size: 18pt;
+                    font-weight: 700;
+                    letter-spacing: -0.5px;
+                }
+                .pr-clinic-sub {
+                    font-size: 9pt;
+                    color: #555;
+                    margin-top: 3px;
+                }
+                .pr-doc-title {
+                    font-size: 13pt;
+                    font-weight: 700;
+                    text-align: center;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin: 10px 0 6px;
+                    border-top: 1px solid #ccc;
+                    border-bottom: 1px solid #ccc;
+                    padding: 5px 0;
+                }
+                .pr-doc-num {
+                    text-align: center;
+                    font-size: 9pt;
+                    color: #777;
+                    margin-bottom: 14px;
+                }
+
+                /* pet info block */
+                .pr-pet-block {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 4px 20px;
+                    background: #f5f5f5;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    padding: 10px 14px;
+                    margin-bottom: 16px;
+                    font-size: 10pt;
+                }
+                .pr-pet-block .pr-row {
+                    display: flex;
+                    gap: 6px;
+                }
+                .pr-pet-block .pr-label {
+                    color: #555;
+                    white-space: nowrap;
+                }
+                .pr-pet-block .pr-val {
+                    font-weight: 600;
+                }
+
+                /* section header */
+                .pr-section-title {
+                    font-size: 11pt;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin: 16px 0 8px;
+                    border-bottom: 1px solid #bbb;
+                    padding-bottom: 4px;
+                }
+
+                /* visit record */
+                .pr-visit {
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    margin-bottom: 10px;
+                    page-break-inside: avoid;
+                }
+                .pr-visit-head {
+                    background: #f0f0f0;
+                    padding: 7px 12px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 10pt;
+                }
+                .pr-visit-head .pr-vdate {
+                    font-weight: 700;
+                }
+                .pr-visit-head .pr-vstatus {
+                    font-size: 9pt;
+                    color: #555;
+                }
+                .pr-visit-body {
+                    padding: 8px 12px;
+                    font-size: 10pt;
+                }
+                .pr-diag {
+                    font-weight: 700;
+                    margin-bottom: 5px;
+                }
+                .pr-detail-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 9.5pt;
+                    margin-top: 6px;
+                }
+                .pr-detail-table th {
+                    background: #ececec;
+                    text-align: left;
+                    padding: 4px 8px;
+                    font-weight: 600;
+                    border: 1px solid #ddd;
+                }
+                .pr-detail-table td {
+                    padding: 4px 8px;
+                    border: 1px solid #ddd;
+                    vertical-align: top;
+                }
+                .pr-total-row {
+                    text-align: right;
+                    font-weight: 700;
+                    font-size: 10pt;
+                    margin-top: 5px;
+                    padding-top: 4px;
+                    border-top: 1px solid #ccc;
+                }
+                .pr-doctor-row {
+                    font-size: 9.5pt;
+                    color: #555;
+                    margin-top: 4px;
+                }
+
+                /* grand total block */
+                .pr-grand-total {
+                    margin-top: 14px;
+                    border-top: 2px solid #1a1a1a;
+                    padding-top: 8px;
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 12pt;
+                    font-weight: 700;
+                }
+
+                /* footer */
+                .pr-footer {
+                    margin-top: 24px;
+                    border-top: 1px solid #ccc;
+                    padding-top: 10px;
+                    font-size: 8.5pt;
+                    color: #666;
+                    text-align: center;
+                }
+                .pr-footer p {
+                    margin: 2px 0;
+                }
+                .pr-sign-block {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 20px;
+                    margin-top: 28px;
+                    font-size: 9.5pt;
+                }
+                .pr-sign-line {
+                    border-bottom: 1px solid #999;
+                    height: 24px;
+                    margin-bottom: 4px;
+                }
+                .pr-sign-label {
+                    color: #777;
+                    font-size: 8.5pt;
+                }
+            }
+
+            /* print root hidden during screen view */
+            #printRoot {
+                display: none;
+            }
         </style>
     </head>
     <body>
@@ -2346,37 +2590,57 @@
                                 История визитов и диагнозов
                             </div>
                         </div>
-                        <select
-                            style="
-                                width: auto;
-                                padding: 7px 12px;
-                                font-size: 13px;
-                            "
-                        >
-                            <option>🐱 Барсик</option>
-                            <option>🐶 Рыжик</option>
-                            <option>🐇 Снежок</option>
-                        </select>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <select
+                                id="historyPetSelect"
+                                style="
+                                    width: auto;
+                                    padding: 7px 12px;
+                                    font-size: 13px;
+                                "
+                            >
+                                <option>🐱 Барсик</option>
+                                <option>🐶 Рыжик</option>
+                                <option>🐇 Снежок</option>
+                            </select>
+                            <button
+                                class="btn btn-ghost btn-sm"
+                                onclick="openPrintDialog()"
+                                title="Печать журнала здоровья"
+                            >
+                                🖨️ Печать
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="visit-item">
+                    <div class="visit-item" data-visit-id="1">
                         <div class="visit-head">
                             <div>
-                                <span class="visit-date"
-                                    >10.04.2026 · 11:00</span
-                                >
-                                <span class="visit-doctor">
-                                    · Кузнецов А.В.</span
-                                >
+                                <span class="visit-date">10.04.2026 · 11:00</span>
+                                <span class="visit-doctor"> · Кузнецов А.В.</span>
                             </div>
-                            <span class="badge badge-confirmed">Завершён</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <span class="badge badge-confirmed">Завершён</span>
+                                <button
+                                    class="btn btn-ghost btn-sm"
+                                    onclick="openPrintDialog(1)"
+                                    title="Печать этой записи"
+                                    style="padding:3px 8px;font-size:11px;"
+                                >🖨️</button>
+                            </div>
                         </div>
                         <div class="visit-body">
                             <div class="visit-diagnosis">
                                 🔬 ОРВИ у кошек (ринотрахеит)
                             </div>
                             <div class="visit-detail">
-                                Назначено: Амоксициллин × 1, Осмотр × 1
+                                Назначено: Амоксициллин 250 мг × 1 уп., Осмотр первичный × 1
+                            </div>
+                            <div class="visit-detail" style="margin-top:4px;">
+                                Анализы: ОАК — лейкоциты 12,4 × 10⁹/л (↑), эритроциты 7,2 × 10¹²/л
+                            </div>
+                            <div class="visit-detail" style="margin-top:4px;">
+                                Рекомендации: Ограничить контакт с другими животными на 14 дней
                             </div>
                             <div
                                 style="
@@ -2390,22 +2654,31 @@
                         </div>
                     </div>
 
-                    <div class="visit-item">
+                    <div class="visit-item" data-visit-id="2">
                         <div class="visit-head">
                             <div>
-                                <span class="visit-date"
-                                    >15.02.2026 · 09:30</span
-                                >
+                                <span class="visit-date">15.02.2026 · 09:30</span>
                                 <span class="visit-doctor"> · Попова М.С.</span>
                             </div>
-                            <span class="badge badge-confirmed">Завершён</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <span class="badge badge-confirmed">Завершён</span>
+                                <button
+                                    class="btn btn-ghost btn-sm"
+                                    onclick="openPrintDialog(2)"
+                                    title="Печать этой записи"
+                                    style="padding:3px 8px;font-size:11px;"
+                                >🖨️</button>
+                            </div>
                         </div>
                         <div class="visit-body">
                             <div class="visit-diagnosis">
                                 💉 Плановая вакцинация
                             </div>
                             <div class="visit-detail">
-                                Назначено: Вакцинация × 1
+                                Назначено: Вакцина Nobivac Tricat × 1, Осмотр × 1
+                            </div>
+                            <div class="visit-detail" style="margin-top:4px;">
+                                Вес на приёме: 4,1 кг. Следующая вакцинация: 15.02.2027
                             </div>
                             <div
                                 style="
@@ -2419,22 +2692,32 @@
                         </div>
                     </div>
 
-                    <div class="visit-item">
+                    <div class="visit-item" data-visit-id="3">
                         <div class="visit-head">
                             <div>
-                                <span class="visit-date"
-                                    >03.11.2025 · 15:00</span
-                                >
-                                <span class="visit-doctor">
-                                    · Кузнецов А.В.</span
-                                >
+                                <span class="visit-date">03.11.2025 · 15:00</span>
+                                <span class="visit-doctor"> · Кузнецов А.В.</span>
                             </div>
-                            <span class="badge badge-confirmed">Завершён</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <span class="badge badge-confirmed">Завершён</span>
+                                <button
+                                    class="btn btn-ghost btn-sm"
+                                    onclick="openPrintDialog(3)"
+                                    title="Печать этой записи"
+                                    style="padding:3px 8px;font-size:11px;"
+                                >🖨️</button>
+                            </div>
                         </div>
                         <div class="visit-body">
                             <div class="visit-diagnosis">🩺 Отит наружный</div>
                             <div class="visit-detail">
-                                Назначено: Отипакс × 2, Осмотр × 1
+                                Назначено: Отипакс ушные капли × 2 фл., Осмотр ушного канала × 1
+                            </div>
+                            <div class="visit-detail" style="margin-top:4px;">
+                                Анализы: Цитология — нейтрофилы, кокки. Бак. посев назначен.
+                            </div>
+                            <div class="visit-detail" style="margin-top:4px;">
+                                Рекомендации: Контрольный осмотр через 10 дней
                             </div>
                             <div
                                 style="
@@ -4156,6 +4439,30 @@
             </div>
         </div>
 
+        <!-- Print Dialog Modal -->
+        <div class="modal-overlay" id="printModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <span class="modal-title">🖨️ Печать журнала здоровья</span>
+                    <button class="modal-close" onclick="closeModal('printModal')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p style="font-size:13px;color:var(--text2);margin-bottom:4px;">
+                        Выберите, что именно распечатать:
+                    </p>
+                    <div class="print-option-grid" id="printOptionGrid">
+                        <!-- filled by JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost" onclick="closeModal('printModal')">Отмена</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden print root — populated by JS before window.print() -->
+        <div id="printRoot"></div>
+
         <!-- TOAST AREA -->
         <div class="toast-area" id="toastArea"></div>
 
@@ -4550,7 +4857,282 @@
                 });
             });
 
+            window.addEventListener("resize", drawWeightChart);
+
+            // redraw when weight page is navigated to
+            document.querySelectorAll(".nav-item").forEach((item) => {
+                item.addEventListener("click", () => {
+                    if (item.textContent.includes("Динамика"))
+                        setTimeout(drawWeightChart, 50);
+                });
+            });
+
             setTimeout(drawWeightChart, 150);
+
+            // ── HEALTH JOURNAL PRINT ──
+
+            // Sample data matching the visit records in the UI
+            const healthData = {
+                pet: {
+                    name: "Барсик",
+                    species: "Кошка",
+                    breed: "Шотландская вислоухая",
+                    dob: "12.03.2021",
+                    weight: "4,2 кг",
+                    chip: "643 093 400 000 001",
+                    owner: "Иванов Иван Иванович",
+                    ownerPhone: "+7 (916) 000-00-01",
+                },
+                visits: [
+                    {
+                        id: 1,
+                        date: "10.04.2026",
+                        time: "11:00",
+                        doctor: "Кузнецов А.В.",
+                        specialty: "Терапевт",
+                        status: "Завершён",
+                        diagnosis: "ОРВИ у кошек (ринотрахеит)",
+                        complaints: "Выделения из носа, чихание, снижение аппетита в течение 3 дней",
+                        services: [
+                            { name: "Первичный осмотр", qty: 1, price: 600 },
+                            { name: "Амоксициллин 250 мг", qty: 1, price: 850 },
+                            { name: "Интерферон кошачий (капли)", qty: 1, price: 400 },
+                        ],
+                        analyses: [
+                            { name: "ОАК", result: "Лейкоциты 12,4 × 10⁹/л (↑), эритроциты 7,2 × 10¹²/л (N)" },
+                        ],
+                        recommendations: "Амоксициллин 62,5 мг 2 р/д 7 дней. Ограничить контакт с другими животными 14 дней. Контроль через 7 дней.",
+                        total: 1850,
+                    },
+                    {
+                        id: 2,
+                        date: "15.02.2026",
+                        time: "09:30",
+                        doctor: "Попова М.С.",
+                        specialty: "Терапевт",
+                        status: "Завершён",
+                        diagnosis: "Плановая вакцинация",
+                        complaints: "Плановый визит",
+                        services: [
+                            { name: "Осмотр перед вакцинацией", qty: 1, price: 300 },
+                            { name: "Вакцина Nobivac Tricat", qty: 1, price: 550 },
+                        ],
+                        analyses: [],
+                        recommendations: "Следующая вакцинация: 15.02.2027. Вес на приёме: 4,1 кг. Ограничение выгула 3 дня.",
+                        total: 850,
+                    },
+                    {
+                        id: 3,
+                        date: "03.11.2025",
+                        time: "15:00",
+                        doctor: "Кузнецов А.В.",
+                        specialty: "Терапевт",
+                        status: "Завершён",
+                        diagnosis: "Отит наружный (правое ухо)",
+                        complaints: "Почёсывание правого уха, тряска головой, неприятный запах 5 дней",
+                        services: [
+                            { name: "Осмотр ушного канала (отоскопия)", qty: 1, price: 500 },
+                            { name: "Отипакс ушные капли (16 мл)", qty: 2, price: 350 },
+                        ],
+                        analyses: [
+                            { name: "Цитология ушного отделяемого", result: "Нейтрофилы, кокки (++). Бактериальный посев назначен." },
+                        ],
+                        recommendations: "Отипакс 4 кап. 3 р/д 7 дней. Контрольный осмотр через 10 дней.",
+                        total: 1200,
+                    },
+                ],
+            };
+
+            /**
+             * Opens the print dialog.
+             * @param {number|null} visitId  – if provided, pre-select that single visit;
+             *                                  if null/undefined — show choice modal.
+             */
+            function openPrintDialog(visitId) {
+                const grid = document.getElementById("printOptionGrid");
+                grid.innerHTML = "";
+
+                // Option: print all
+                const cardAll = document.createElement("div");
+                cardAll.className = "print-option-card";
+                cardAll.innerHTML = `
+                    <div class="poi">📄</div>
+                    <div class="pot">Вся история</div>
+                    <div class="pod">Все ${healthData.visits.length} записи</div>`;
+                cardAll.onclick = function () {
+                    closeModal("printModal");
+                    generatePrintPreview(null);
+                };
+                grid.appendChild(cardAll);
+
+                // Option: print single visit (if visitId provided, auto-trigger)
+                if (visitId != null) {
+                    const visit = healthData.visits.find(v => v.id === visitId);
+                    if (visit) {
+                        closeModal("printModal");
+                        generatePrintPreview(visitId);
+                        return;
+                    }
+                }
+
+                // Option cards for individual visits
+                healthData.visits.forEach(function (v) {
+                    const card = document.createElement("div");
+                    card.className = "print-option-card";
+                    card.innerHTML = `
+                        <div class="poi">🗒️</div>
+                        <div class="pot">${v.date}</div>
+                        <div class="pod">${v.diagnosis.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]+/u, "")}</div>`;
+                    card.onclick = (function (id) {
+                        return function () {
+                            closeModal("printModal");
+                            generatePrintPreview(id);
+                        };
+                    })(v.id);
+                    grid.appendChild(card);
+                });
+
+                openModal("printModal");
+            }
+
+            /**
+             * Generates the print-ready HTML in #printRoot and calls window.print().
+             * @param {number|null} visitId  – null = all visits, number = single visit
+             */
+            function generatePrintPreview(visitId) {
+                const pet = healthData.pet;
+                const visitsToPrint = visitId == null
+                    ? healthData.visits
+                    : healthData.visits.filter(v => v.id === visitId);
+
+                const now = new Date();
+                const docNum = "ЖЗ-" + now.getFullYear() + "-" + now.getTime();
+                const printDate = now.toLocaleDateString("ru-RU", {
+                    day: "2-digit", month: "2-digit", year: "numeric",
+                    hour: "2-digit", minute: "2-digit",
+                });
+
+                const grandTotal = visitsToPrint.reduce((s, v) => s + v.total, 0);
+
+                // Build visits HTML
+                let visitsHtml = "";
+                visitsToPrint.forEach(function (v) {
+                    const servRows = v.services.map(function (s) {
+                        return `<tr>
+                            <td>${s.name}</td>
+                            <td style="text-align:center;">${s.qty}</td>
+                            <td style="text-align:right;">${s.price.toLocaleString("ru-RU")} руб.</td>
+                            <td style="text-align:right;">${(s.qty * s.price).toLocaleString("ru-RU")} руб.</td>
+                        </tr>`;
+                    }).join("");
+
+                    const analysesHtml = v.analyses.length
+                        ? `<div class="pr-section-title" style="font-size:9pt;margin-top:8px;">Результаты анализов</div>` +
+                          v.analyses.map(a => `<div style="font-size:9.5pt;margin-bottom:3px;"><b>${a.name}:</b> ${a.result}</div>`).join("")
+                        : "";
+
+                    visitsHtml += `
+                        <div class="pr-visit">
+                            <div class="pr-visit-head">
+                                <div>
+                                    <span class="pr-vdate">${v.date} · ${v.time}</span>
+                                    <span style="font-size:9pt;color:#555;margin-left:10px;">
+                                        Врач: ${v.doctor} (${v.specialty})
+                                    </span>
+                                </div>
+                                <span class="pr-vstatus">${v.status}</span>
+                            </div>
+                            <div class="pr-visit-body">
+                                <div class="pr-diag">Диагноз: ${v.diagnosis}</div>
+                                <div style="font-size:9.5pt;color:#555;margin-bottom:6px;">
+                                    Жалобы: ${v.complaints}
+                                </div>
+
+                                <table class="pr-detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Услуга / Препарат</th>
+                                            <th style="text-align:center;width:44px;">Кол.</th>
+                                            <th style="text-align:right;width:90px;">Цена</th>
+                                            <th style="text-align:right;width:90px;">Сумма</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${servRows}</tbody>
+                                </table>
+
+                                ${analysesHtml}
+
+                                <div class="pr-total-row">Итого за приём: ${v.total.toLocaleString("ru-RU")} руб.</div>
+                                <div class="pr-doctor-row">
+                                    Назначения: ${v.recommendations}
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+                // Full document HTML
+                const html = `
+                    <div class="pr-header">
+                        <div class="pr-clinic-name">🐾 ВетКлиника</div>
+                        <div class="pr-clinic-sub">
+                            г. Москва, ул. Примерная, д. 1 · Тел: +7 (495) 000-00-00 · vetclinica.ru
+                        </div>
+                        <div class="pr-clinic-sub">
+                            Лицензия № ЛО-77-01-000001 от 01.01.2020
+                        </div>
+                    </div>
+
+                    <div class="pr-doc-title">${visitId == null ? "Журнал здоровья" : "Справка о посещении"}</div>
+                    <div class="pr-doc-num">Документ № ${docNum} · Дата выдачи: ${printDate}</div>
+
+                    <div class="pr-section-title">Данные о животном</div>
+                    <div class="pr-pet-block">
+                        <div class="pr-row"><span class="pr-label">Кличка:</span><span class="pr-val">${pet.name}</span></div>
+                        <div class="pr-row"><span class="pr-label">Вид:</span><span class="pr-val">${pet.species}</span></div>
+                        <div class="pr-row"><span class="pr-label">Порода:</span><span class="pr-val">${pet.breed}</span></div>
+                        <div class="pr-row"><span class="pr-label">Дата рожд.:</span><span class="pr-val">${pet.dob}</span></div>
+                        <div class="pr-row"><span class="pr-label">Вес:</span><span class="pr-val">${pet.weight}</span></div>
+                        <div class="pr-row"><span class="pr-label">Микрочип:</span><span class="pr-val">${pet.chip}</span></div>
+                        <div class="pr-row"><span class="pr-label">Владелец:</span><span class="pr-val">${pet.owner}</span></div>
+                        <div class="pr-row"><span class="pr-label">Телефон:</span><span class="pr-val">${pet.ownerPhone}</span></div>
+                    </div>
+
+                    <div class="pr-section-title">${visitId == null ? "История посещений" : "Запись о визите"}</div>
+                    ${visitsHtml}
+
+                    ${visitsToPrint.length > 1 ? `
+                    <div class="pr-grand-total">
+                        <span>Итого за все посещения:</span>
+                        <span>${grandTotal.toLocaleString("ru-RU")} руб.</span>
+                    </div>` : ""}
+
+                    <div class="pr-sign-block">
+                        <div>
+                            <div class="pr-sign-line"></div>
+                            <div class="pr-sign-label">Врач (подпись / ФИО)</div>
+                        </div>
+                        <div>
+                            <div class="pr-sign-line"></div>
+                            <div class="pr-sign-label">Владелец животного (подпись / ФИО)</div>
+                        </div>
+                    </div>
+
+                    <div class="pr-footer">
+                        <p>Документ сформирован автоматически информационной системой ВетКлиника</p>
+                        <p>Дата и время печати: ${printDate}</p>
+                        <p>Для проверки подлинности обратитесь на стойку регистрации или на сайт vetclinica.ru</p>
+                    </div>`;
+
+                const root = document.getElementById("printRoot");
+                root.innerHTML = html;
+
+                // Short delay so browser can render, then print
+                setTimeout(function () {
+                    window.print();
+                    // Clean up after print dialog closes
+                    setTimeout(function () { root.innerHTML = ""; }, 500);
+                }, 80);
+            }
         </script>
     </body>
 </html>
