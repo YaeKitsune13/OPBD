@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+
+/* Твой блок с переменными остается для использования в обычном CSS или JS */
+:root {
+  --bg: #0e0f11;
+  --surface: #16181c;
+  --surface2: #1c1f25;
+  --surface3: #22262e;
+  --border: #2a2e38;
+  --border2: #333844;
+  --text: #e8eaf0;
+  --text2: #9aa0b0;
+  --text3: #5c6270;
+  --accent: #4ade80;
+  --accent-dim: rgba(74, 222, 128, 0.12);
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --blue: #60a5fa;
+  --sidebar-w: 220px;
+  --topbar-h: 52px;
+  --radius: 6px;
+  --font: 'Onest', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+/* А здесь мы говорим Tailwind, как называть эти классы */
+@theme {
+  /* Цвета: теперь можно писать bg-bg, bg-surface, text-accent */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface2);
+  --color-surface-3: var(--surface3);
+  --color-border-main: var(--border);
+  --color-border-2: var(--border2);
+  --color-text-main: var(--text);
+  --color-text-dim: var(--text2);
+  --color-text-mute: var(--text3);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-red: var(--red);
+  --color-yellow: var(--yellow);
+  --color-blue: var(--blue);
+
+  /* Шрифты: font-sans и font-mono */
+  --font-sans: var(--font);
+  --font-mono: var(--mono);
+
+  /* Размеры: w-sidebar, h-topbar */
+  --spacing-sidebar: var(--sidebar-w);
+  --spacing-topbar: var(--topbar-h);
+
+  /* Радиус: rounded-main */
+  --radius-main: var(--radius);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Создаем класс animate-fade-in */
+  --animate-fade-in: fade-in 0.6s ease-out;
+}
+
+/* Глобальный сброс для всего проекта */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
