@@ -89,7 +89,7 @@ function goTo(pageId) {
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Пациенты</div>
-        <div class="nav-item" @click="goTo('search')">
+        <div class="nav-item" :class="{ active: activePage === 'search' }" @click="goTo('search')">
           <span class="nav-icon">🔍</span> Поиск пациента
         </div>
       </div>
@@ -106,20 +106,32 @@ function goTo(pageId) {
         >
           <span class="nav-icon">📊</span> Сводка
         </div>
-        <div class="nav-item" @click="goTo('revenue')">
+        <div
+          class="nav-item"
+          :class="{ active: activePage === 'revenue' }"
+          @click="goTo('revenue')"
+        >
           <span class="nav-icon">💰</span> Выручка
         </div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Справочники</div>
-        <div class="nav-item" @click="goTo('services')">
+        <div
+          class="nav-item"
+          :class="{ active: activePage === 'services' }"
+          @click="goTo('services')"
+        >
           <span class="nav-icon">🔧</span> Услуги
+        </div>
+        <!-- ДОБАВЛЕННЫЙ ПУНКТ -->
+        <div class="nav-item" :class="{ active: activePage === 'meds' }" @click="goTo('meds')">
+          <span class="nav-icon">💊</span> Медикаменты
         </div>
       </div>
     </div>
   </aside>
 
-  <!-- Оверлей: показывается только когда сайдбар открыт (isOpen === true) -->
+  <!-- Оверлей -->
   <div
     v-if="isOpen"
     class="sidebar-overlay"
@@ -129,6 +141,7 @@ function goTo(pageId) {
 </template>
 
 <style scoped>
+/* Стили остаются без изменений */
 .sidebar {
   width: var(--sidebar-w);
   background: var(--surface);

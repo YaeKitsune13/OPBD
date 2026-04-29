@@ -8,17 +8,6 @@ defineProps({
 
 // Определяем события, которые компонент отправляет наверх (в App.vue)
 const emit = defineEmits(['update-role', 'toggle-sidebar', 'open-profile'])
-
-const roles = [
-  { id: 'client', label: 'Клиент' },
-  { id: 'doctor', label: 'Врач' },
-  { id: 'admin', label: 'Администрация' },
-]
-
-function handleRoleChange(roleId) {
-  // Мы не меняем DOM здесь, мы просто говорим родителю: "Эй, роль изменилась!"
-  emit('update-role', roleId)
-}
 </script>
 
 <template>
@@ -32,19 +21,6 @@ function handleRoleChange(roleId) {
     </div>
 
     <div class="topbar-sep"></div>
-
-    <!-- Переключатель ролей -->
-    <div class="role-switcher">
-      <button
-        v-for="role in roles"
-        :key="role.id"
-        class="role-btn"
-        :class="{ active: currentRole === role.id }"
-        @click="handleRoleChange(role.id)"
-      >
-        {{ role.label }}
-      </button>
-    </div>
 
     <!-- Блок пользователя -->
     <div class="topbar-user" @click="emit('open-profile')">

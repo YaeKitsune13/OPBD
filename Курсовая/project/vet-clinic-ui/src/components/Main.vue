@@ -1,8 +1,9 @@
 <script setup>
-import { ref, defineAsyncComponent, watch, nextTick } from 'vue' // Добавили nextTick сюда
+import { ref, computed, defineAsyncComponent, watch, nextTick } from 'vue'
 import TopBar from './ui/TopBar.vue'
 import SideBar from './ui/SideBar.vue'
 import PrintZone from './ui/PrintZone.vue'
+import ProfilePanel from './ui/ProfilePanel.vue'
 
 const props = defineProps(['initialRole'])
 const emit = defineEmits(['logout'])
@@ -11,14 +12,45 @@ const emit = defineEmits(['logout'])
 const role = ref(props.initialRole)
 const currentPage = ref('dashboard')
 const mobileMenu = ref(false)
+const isProfileOpen = ref(false)
 
+// Данные для печати
 const printData = ref({
   pet: null,
   visits: [],
   type: 'history',
 })
 
-// Следим за изменением роли извне (если нужно)
+// --- ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (Добавлено) ---
+// Вычисляем данные профиля на основе текущей роли
+const currentUser = computed(() => {
+  const configs = {
+    client: {
+      name: 'Иванов Иван Иванович',
+      avatar: 'ИВ',
+      roleName: 'Клиент',
+      email: 'ivanov@mail.ru',
+      phone: '+7 (900) 123-45-67',
+    },
+    doctor: {
+      name: 'Кузнецов Андрей Владимирович',
+      avatar: 'КА',
+      roleName: 'Ветеринарный врач',
+      email: 'dr.kuznetsov@vet.ru',
+      phone: '+7 (900) 777-88-99',
+    },
+    admin: {
+      name: 'Администратор системы',
+      avatar: 'АД',
+      roleName: 'Администратор',
+      email: 'admin@vet.ru',
+      phone: '+7 (900) 000-00-01',
+    },
+  }
+  return configs[role.value] || configs.client
+})
+
+// Следим за изменением роли извне
 watch(
   () => props.initialRole,
   (newRole) => {
@@ -26,7 +58,7 @@ watch(
   },
 )
 
-// --- ЛЕНИВАЯ ЗАГРУЗКА СТРАНИЦ ---
+// --- ЛЕНИВАЯ ЗАГРУЗКА ---
 const DashboardPage = defineAsyncComponent(() => import('./pages/client/DashboardPage.vue'))
 const PetsPage = defineAsyncComponent(() => import('./pages/client/PetsPage.vue'))
 const AppointmentsPage = defineAsyncComponent(() => import('./pages/client/AppointmentsPage.vue'))
@@ -43,21 +75,17 @@ const RevenuePage = defineAsyncComponent(() => import('./pages/admin/RevenuePage
 const ServicesPage = defineAsyncComponent(() => import('./pages/admin/ServicesPage.vue'))
 const MedsPage = defineAsyncComponent(() => import('./pages/admin/MedsPage.vue'))
 
-// Метод смены роли и сброса страницы
+// Метод смены роли
 function updateRole(newRole) {
   role.value = newRole
-  const firstPages = {
-    client: 'dashboard',
-    doctor: 'today',
-    admin: 'analytics',
-  }
+  const firstPages = { client: 'dashboard', doctor: 'today', admin: 'analytics' }
   currentPage.value = firstPages[newRole]
 }
 
 function triggerPrint(data) {
-  printData.value = data // Записываем данные в реактивный объект для PrintZone
+  printData.value = data
   nextTick(() => {
-    window.print() // Запускаем системное окно печати
+    window.print()
   })
 }
 </script>
@@ -65,8 +93,11 @@ function triggerPrint(data) {
 <template>
   <TopBar
     :current-role="role"
+    :user-name="currentUser.name"
+    :user-avatar="currentUser.avatar"
     @update-role="updateRole"
     @toggle-sidebar="mobileMenu = !mobileMenu"
+    @open-profile="isProfileOpen = true"
     @logout="emit('logout')"
   />
 
@@ -81,7 +112,7 @@ function triggerPrint(data) {
 
     <main class="main" id="main">
       <div class="page-container">
-        <!-- Client Pages -->
+        <!-- Client -->
         <DashboardPage v-if="currentPage === 'dashboard'" @navigate="(p) => (currentPage = p)" />
         <PetsPage v-if="currentPage === 'pets'" />
         <AppointmentsPage
@@ -89,16 +120,15 @@ function triggerPrint(data) {
           @navigate="(p) => (currentPage = p)"
         />
         <BookPage v-if="currentPage === 'book'" @navigate="(p) => (currentPage = p)" />
-        <!-- <-- Добавлено -->
         <HistoryPage v-if="currentPage === 'history'" @print="triggerPrint" />
         <WeightPage v-if="currentPage === 'weight'" />
 
-        <!-- Doctor Pages -->
+        <!-- Doctor -->
         <TodayPage v-if="currentPage === 'today'" @navigate="(p) => (currentPage = p)" />
-        <ConductPage v-if="currentPage === 'conduct'" />
+        <ConductPage v-if="currentPage === 'conduct'" @navigate="(p) => (currentPage = p)" />
         <SearchPage v-if="currentPage === 'search'" />
 
-        <!-- Admin Pages -->
+        <!-- Admin -->
         <AnalyticsPage v-if="currentPage === 'analytics'" />
         <RevenuePage v-if="currentPage === 'revenue'" />
         <ServicesPage v-if="currentPage === 'services'" />
@@ -107,6 +137,15 @@ function triggerPrint(data) {
     </main>
   </div>
 
+  <!-- Профиль -->
+  <ProfilePanel
+    :is-open="isProfileOpen"
+    :user="currentUser"
+    @close="isProfileOpen = false"
+    @logout="emit('logout')"
+  />
+
+  <!-- Печать -->
   <Teleport to="body">
     <PrintZone
       id="printRoot"
@@ -123,34 +162,21 @@ function triggerPrint(data) {
   height: calc(100vh - var(--topbar-h));
   overflow: hidden;
 }
-
 .main {
   flex: 1;
   overflow-y: auto;
   background: var(--bg);
   scroll-behavior: smooth;
 }
-
 .page-container {
   padding: 24px;
-  max-width: 1400px; /* Чтобы на очень широких мониторах не растягивалось слишком сильно */
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }
-
 @media (max-width: 768px) {
   .page-container {
     padding: 16px;
   }
-}
-
-/* Анимация перехода между страницами */
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.2s ease;
-}
-.v-enter-from,
-.v-leave-to {
-  opacity: 0;
 }
 </style>
