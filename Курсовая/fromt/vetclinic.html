@@ -92,15 +92,7 @@
                 flex: 1;
             }
 
-            .role-switcher {
-                display: flex;
-                gap: 2px;
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                padding: 3px;
-            }
-
+            /* role-switcher kept for dev-bar buttons only */
             .role-btn {
                 padding: 5px 14px;
                 border: none;
@@ -115,17 +107,8 @@
                 white-space: nowrap;
             }
 
-            .role-btn.active {
-                background: var(--surface3);
-                color: var(--text);
-                border: 1px solid var(--border2);
-            }
-
-            .role-btn:hover:not(.active) {
-                color: var(--text);
-            }
-
             .topbar-user {
+                position: relative;
                 display: flex;
                 align-items: center;
                 gap: 8px;
@@ -159,7 +142,70 @@
                 font-weight: 500;
             }
 
-            .hamburger {
+            .topbar-user-caret {
+                font-size: 10px;
+                color: var(--text3);
+                transition: transform 0.15s;
+            }
+
+            /* ── PROFILE DROPDOWN ── */
+            .profile-dropdown {
+                position: fixed;
+                top: var(--topbar-h);
+                right: 12px;
+                width: 200px;
+                background: var(--surface);
+                border: 1px solid var(--border2);
+                border-radius: var(--radius);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+                z-index: 600;
+                overflow: hidden;
+                display: none;
+                margin-top: 4px;
+            }
+
+            .profile-dropdown.open {
+                display: block;
+                animation: fadeIn 0.15s ease;
+            }
+
+            .pd-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 14px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--text);
+                transition: background 0.12s;
+            }
+
+            .pd-item:hover {
+                background: var(--surface2);
+            }
+
+            .pd-icon {
+                font-size: 14px;
+                width: 20px;
+                text-align: center;
+            }
+
+            .pd-divider {
+                height: 1px;
+                background: var(--border);
+                margin: 2px 0;
+            }
+
+            .pd-item-danger {
+                color: var(--red);
+            }
+
+            .pd-item-danger:hover {
+                background: var(--red-dim);
+            }
+
+
                 display: none;
                 background: none;
                 border: none;
@@ -1001,13 +1047,6 @@
 
                 .stats-grid {
                     grid-template-columns: repeat(2, 1fr);
-                }
-
-                .role-switcher {
-                    gap: 0;
-                }
-                .role-btn {
-                    padding: 5px 10px;
                 }
 
                 .topbar-user-name {
@@ -2143,23 +2182,40 @@
                 <span>ВетКлиника</span>
             </div>
             <div class="topbar-sep"></div>
-            <div class="role-switcher">
-                <button
-                    class="role-btn active"
-                    onclick="setRole('client', this)"
-                >
-                    Клиент
-                </button>
-                <button class="role-btn" onclick="setRole('doctor', this)">
-                    Врач
-                </button>
-                <button class="role-btn" onclick="setRole('admin', this)">
-                    Администрация
-                </button>
-            </div>
-            <div class="topbar-user" onclick="showToast('Профиль', 'info')">
+            <div
+                class="topbar-user"
+                id="topbarUser"
+                onclick="toggleProfileDropdown()"
+                aria-label="Профиль пользователя"
+            >
                 <div class="avatar" id="userAvatar">ИВ</div>
                 <span class="topbar-user-name" id="userName">Иванов И.И.</span>
+                <span class="topbar-user-caret">▾</span>
+            </div>
+            <!-- PROFILE DROPDOWN -->
+            <div class="profile-dropdown" id="profileDropdown">
+                <div
+                    class="pd-item"
+                    onclick="openProfile(); closeProfileDropdown()"
+                >
+                    <span class="pd-icon">👤</span>
+                    <span>Профиль</span>
+                </div>
+                <div
+                    class="pd-item"
+                    onclick="showToast('Настройки в разработке', 'info'); closeProfileDropdown()"
+                >
+                    <span class="pd-icon">⚙️</span>
+                    <span>Настройки</span>
+                </div>
+                <div class="pd-divider"></div>
+                <div
+                    class="pd-item pd-item-danger"
+                    onclick="doLogout(); closeProfileDropdown()"
+                >
+                    <span class="pd-icon">↩</span>
+                    <span>Выйти</span>
+                </div>
             </div>
         </div>
 
@@ -4920,17 +4976,41 @@
                 client: {
                     nav: "nav-client",
                     firstPage: "dashboard",
-                    user: { avatar: "ИВ", name: "Иванов И.И." },
+                    user: {
+                        avatar: "ИВ",
+                        name: "Иванов И.И.",
+                        fullName: "Иванов Иван Иванович",
+                        roleName: "Клиент",
+                        email: "ivanov@mail.ru",
+                        phone: "+79001234567",
+                        spec: null,
+                    },
                 },
                 doctor: {
                     nav: "nav-doctor",
                     firstPage: "today",
-                    user: { avatar: "КА", name: "Кузнецов А.В." },
+                    user: {
+                        avatar: "КА",
+                        name: "Кузнецов А.В.",
+                        fullName: "Кузнецов Андрей Владимирович",
+                        roleName: "Врач",
+                        email: "kuznetsov@vetclinic.ru",
+                        phone: "+79001234568",
+                        spec: "Терапевт",
+                    },
                 },
                 admin: {
                     nav: "nav-admin",
                     firstPage: "analytics",
-                    user: { avatar: "АД", name: "Администратор" },
+                    user: {
+                        avatar: "АД",
+                        name: "Администратор",
+                        fullName: "Администратор системы",
+                        roleName: "Администратор",
+                        email: "admin@vetclinic.ru",
+                        phone: "+79001234569",
+                        spec: null,
+                    },
                 },
             };
 
@@ -4967,17 +5047,7 @@
                 if (email.includes("doctor")) roleToSet = "doctor";
                 if (email.includes("admin")) roleToSet = "admin";
 
-                // Находим кнопку в switcher для визуального обновления
-                const btn =
-                    document.querySelectorAll(".role-btn")[
-                        roleToSet === "client"
-                            ? 0
-                            : roleToSet === "doctor"
-                              ? 1
-                              : 2
-                    ];
-
-                finalizeLogin(roleToSet, btn);
+                finalizeLogin(roleToSet);
             }
 
             function doRegister() {
@@ -4987,25 +5057,19 @@
                     return;
                 }
                 showToast("Регистрация успешна!", "success");
-                finalizeLogin(
-                    "client",
-                    document.querySelectorAll(".role-btn")[0],
-                );
+                finalizeLogin("client");
             }
 
             function quickLogin(role) {
-                const btnIdx =
-                    role === "client" ? 0 : role === "doctor" ? 1 : 2;
-                const btn = document.querySelectorAll(".role-btn")[btnIdx];
-                finalizeLogin(role, btn);
+                finalizeLogin(role);
                 showToast(
                     `Вход выполнен как ${roleConfig[role].user.roleName}`,
                     "success",
                 );
             }
 
-            function finalizeLogin(role, btnEl) {
-                setRole(role, btnEl);
+            function finalizeLogin(role) {
+                setRole(role);
                 document.getElementById("authScreen").classList.add("hidden");
             }
 
@@ -5017,15 +5081,31 @@
                 showToast("Выход из системы выполнен", "info");
             }
 
-            // ── ROLE SWITCHING ──
-            function setRole(role, btn) {
-                currentRole = role;
+            // ── PROFILE PANEL ──
+            function openProfile() {
+                document.getElementById("profilePanel").classList.add("open");
+            }
 
-                // update role buttons
+            function closeProfile() {
+                document.getElementById("profilePanel").classList.remove("open");
+            }
+
+            // ── PROFILE DROPDOWN ──
+            function toggleProfileDropdown() {
                 document
-                    .querySelectorAll(".role-btn")
-                    .forEach((b) => b.classList.remove("active"));
-                btn.classList.add("active");
+                    .getElementById("profileDropdown")
+                    .classList.toggle("open");
+            }
+
+            function closeProfileDropdown() {
+                document
+                    .getElementById("profileDropdown")
+                    .classList.remove("open");
+            }
+
+            // ── ROLE SWITCHING ──
+            function setRole(role) {
+                currentRole = role;
 
                 // show/hide nav sections
                 Object.keys(roleConfig).forEach((r) => {
@@ -5038,6 +5118,41 @@
                 document.getElementById("userAvatar").textContent =
                     cfg.user.avatar;
                 document.getElementById("userName").textContent = cfg.user.name;
+
+                // update profile panel data
+                const panelAvatar = document.getElementById("profileAvatarBig");
+                if (panelAvatar) {
+                    panelAvatar.textContent = cfg.user.avatar;
+                    document.getElementById("profileName").textContent =
+                        cfg.user.fullName;
+                    const badge = document.getElementById("profileRoleBadge");
+                    badge.textContent = cfg.user.roleName;
+                    badge.style.background =
+                        role === "admin"
+                            ? "var(--yellow-dim)"
+                            : role === "doctor"
+                              ? "var(--blue-dim)"
+                              : "var(--accent-dim)";
+                    badge.style.color =
+                        role === "admin"
+                            ? "var(--yellow)"
+                            : role === "doctor"
+                              ? "var(--blue)"
+                              : "var(--accent)";
+                    document.getElementById("profileEmail").textContent =
+                        cfg.user.email;
+                    document.getElementById("profilePhone").textContent =
+                        cfg.user.phone;
+                    const specRow =
+                        document.getElementById("profileSpecRow");
+                    if (cfg.user.spec) {
+                        specRow.style.display = "";
+                        document.getElementById("profileSpec").textContent =
+                            cfg.user.spec;
+                    } else {
+                        specRow.style.display = "none";
+                    }
+                }
 
                 // clear all nav active states
                 document
@@ -5153,6 +5268,22 @@
                         .querySelectorAll(".modal-overlay.active")
                         .forEach((m) => m.classList.remove("active"));
                     closeSidebar();
+                    closeProfileDropdown();
+                    closeProfile();
+                }
+            });
+
+            // ── CLOSE DROPDOWN ON OUTSIDE CLICK ──
+            document.addEventListener("click", (e) => {
+                const dropdown = document.getElementById("profileDropdown");
+                const user = document.getElementById("topbarUser");
+                if (
+                    dropdown &&
+                    dropdown.classList.contains("open") &&
+                    !user.contains(e.target) &&
+                    !dropdown.contains(e.target)
+                ) {
+                    closeProfileDropdown();
                 }
             });
 
