@@ -22,7 +22,6 @@ const popularServices = ref([
         <div class="page-title">Аналитическая сводка</div>
         <div class="page-sub">Апрель 2026</div>
       </div>
-      <button class="btn btn-ghost" @click="alert('Экспорт запущен')">⬇ Экспорт</button>
     </div>
 
     <div class="stats-grid">

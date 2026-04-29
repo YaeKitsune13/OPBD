@@ -53,7 +53,6 @@ function confirm(id) {
       </div>
       <div class="row">
         <span class="badge badge-info">{{ appointments.length }} записи</span>
-        <button class="btn btn-ghost btn-sm">🖨️ Печать</button>
       </div>
     </div>
 
