@@ -1,9 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
+import BaseModal from '../../ui/BaseModal.vue'
 
-const emit = defineEmits(['open-modal'])
-
-// В будущем эти данные придут с бэкенда
 const pets = ref([
   {
     id: 1,
@@ -23,16 +21,47 @@ const pets = ref([
     weight: 28.5,
     avatar: '🐶',
   },
-  {
-    id: 3,
-    name: 'Снежок',
-    type: 'Кролик',
-    breed: 'Вислоухий',
-    dob: '20.06.2024',
-    weight: 2.1,
-    avatar: '🐇',
-  },
 ])
+
+// Состояние модалок
+const isAddModalOpen = ref(false)
+const isDeleteModalOpen = ref(false)
+const petToDelete = ref(null)
+
+// Форма нового питомца
+const newPet = reactive({
+  name: '',
+  type: 'Кошка',
+  breed: '',
+  dob: '',
+  weight: '',
+})
+
+function savePet() {
+  if (!newPet.name || !newPet.dob) return alert('Заполните обязательные поля')
+
+  const id = Date.now()
+  const avatar = newPet.type === 'Кошка' ? '🐱' : newPet.type === 'Собака' ? '🐶' : '🐇'
+
+  pets.value.push({ id, ...newPet, avatar })
+  isAddModalOpen.value = false
+
+  // Сброс формы
+  newPet.name = ''
+  newPet.breed = ''
+  newPet.dob = ''
+  newPet.weight = ''
+}
+
+function confirmDelete(pet) {
+  petToDelete.value = pet
+  isDeleteModalOpen.value = true
+}
+
+function deletePet() {
+  pets.value = pets.value.filter((p) => p.id !== petToDelete.value.id)
+  isDeleteModalOpen.value = false
+}
 </script>
 
 <template>
@@ -42,44 +71,81 @@ const pets = ref([
         <div class="page-title">Мои питомцы</div>
         <div class="page-sub">Карточки и медицинская информация</div>
       </div>
-      <button class="btn btn-primary" @click="emit('open-modal', 'add-pet')">
-        ✚ Добавить питомца
-      </button>
+      <button class="btn btn-primary" @click="isAddModalOpen = true">✚ Добавить питомца</button>
     </div>
 
     <div class="pet-grid">
-      <!-- Карточка существующего питомца -->
       <div v-for="pet in pets" :key="pet.id" class="pet-card">
         <div class="pet-avatar">{{ pet.avatar }}</div>
         <div class="pet-name">{{ pet.name }}</div>
         <div class="pet-meta">{{ pet.type }} · {{ pet.breed }}</div>
-        <div class="pet-meta mt-4">Дата рождения: {{ pet.dob }}</div>
         <div class="pet-weight">⚖️ {{ pet.weight }} кг</div>
 
         <div style="display: flex; gap: 6px; margin-top: 10px">
-          <button
-            class="btn btn-ghost btn-sm"
-            style="flex: 1"
-            @click="emit('open-modal', 'edit-pet', pet)"
-          >
-            ✏ Изменить
-          </button>
-          <button
-            class="btn btn-danger btn-sm"
-            style="flex: 1"
-            @click="emit('open-modal', 'delete-pet', pet)"
-          >
+          <button class="btn btn-ghost btn-sm" style="flex: 1">✏ Изменить</button>
+          <button class="btn btn-danger btn-sm" style="flex: 1" @click="confirmDelete(pet)">
             🗑 Удалить
           </button>
         </div>
       </div>
 
-      <!-- Кнопка-заглушка "Добавить" -->
-      <div class="pet-card add-placeholder" @click="emit('open-modal', 'add-pet')">
+      <div class="pet-card add-placeholder" @click="isAddModalOpen = true">
         <div class="add-icon">+</div>
         <div style="font-size: 12px">Добавить питомца</div>
       </div>
     </div>
+
+    <!-- Модалка добавления -->
+    <BaseModal :show="isAddModalOpen" title="Добавить питомца" @close="isAddModalOpen = false">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Кличка *</label>
+          <input v-model="newPet.name" type="text" placeholder="Только буквы" />
+        </div>
+        <div class="form-group">
+          <label>Вид животного</label>
+          <select v-model="newPet.type">
+            <option>Кошка</option>
+            <option>Собака</option>
+            <option>Кролик</option>
+            <option>Другое</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Порода</label>
+          <input v-model="newPet.breed" type="text" placeholder="Напр. Британец" />
+        </div>
+        <div class="form-group">
+          <label>Дата рождения *</label>
+          <input v-model="newPet.dob" type="date" />
+        </div>
+        <div class="form-group">
+          <label>Текущий вес (кг)</label>
+          <input v-model="newPet.weight" type="number" step="0.1" placeholder="0.0" />
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn btn-ghost" @click="isAddModalOpen = false">Отмена</button>
+        <button class="btn btn-primary" @click="savePet">Сохранить</button>
+      </template>
+    </BaseModal>
+
+    <!-- Модалка удаления -->
+    <BaseModal
+      :show="isDeleteModalOpen"
+      title="Удалить питомца?"
+      maxWidth="400px"
+      @close="isDeleteModalOpen = false"
+    >
+      <p style="color: var(--text2); font-size: 14px">
+        Вы уверены, что хотите удалить карточку питомца <b>{{ petToDelete?.name }}</b
+        >? Это действие необратимо.
+      </p>
+      <template #footer>
+        <button class="btn btn-ghost" @click="isDeleteModalOpen = false">Отмена</button>
+        <button class="btn btn-danger" @click="deletePet">Удалить</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -94,7 +160,6 @@ const pets = ref([
   gap: 8px;
   color: var(--text3);
   cursor: pointer;
-  transition: all 0.2s;
 }
 .add-placeholder:hover {
   color: var(--accent);
