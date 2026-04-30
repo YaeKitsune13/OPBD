@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+
+	"example/project/backend"
 )
 
 func main() {
-	db, err := ConnectDB()
+	db, err := backend.ConnectDB()
 	if err != nil {
 		log.Fatalf("Ошибка: %v", err)
 	}

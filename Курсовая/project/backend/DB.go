@@ -1,7 +1,7 @@
-package main
+package backend
 
 import (
-	"example/project/models"
+	"example/project/backend/models"
 	"fmt"
 
 	"gorm.io/driver/postgres"
