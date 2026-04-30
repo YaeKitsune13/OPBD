@@ -1,20 +1,17 @@
-epackage main
+package main
 
-import "fmt"
-
-type data struct {
-	ID int8 `json:"id"`
-}
+import (
+	"fmt"
+	"log"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
-
-	user := data{ID: 3}
-
-	fmt.Printf("User ID: %d\n", user.ID)
-	printMessage()
+	db, err := ConnectDB()
+	if err != nil {
+		log.Fatalf("Ошибка: %v", err)
+	}
+	fmt.Println("База подключена и миграция выполнена успешно!", db)
 }
-
 func printMessage() {
 	fmt.Println("HElfods")
 }
