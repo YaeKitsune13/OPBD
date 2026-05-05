@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"example/project/backend/dto"
 	"example/project/backend/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -10,6 +12,8 @@ type VisitRepository interface {
 	Create(visit *models.Visit) error
 	GetByID(id int64) (*models.Visit, error)
 	GetByPetID(petId int64) ([]models.Visit, error)
+	GetByPeriod(start, end time.Time) ([]models.Visit, error)
+	GetPopularServices(start, end time.Time) ([]dto.PopularServices, error)
 }
 
 type visitRepository struct {
@@ -40,4 +44,28 @@ func (r *visitRepository) GetByPetID(petId int64) ([]models.Visit, error) {
 		Find(&visits).Error
 
 	return visits, err
+}
+
+func (r *visitRepository) GetByPeriod(start, end time.Time) ([]models.Visit, error) {
+	var visits []models.Visit
+	err := r.db.Preload("Appointment").
+		Where("visit_date BETWEEN ? AND ?", start, end).
+		Find(&visits).Error
+	return visits, err
+}
+
+// В репозиторий:
+func (r *visitRepository) GetPopularServices(start, end time.Time) ([]dto.PopularServices, error) {
+	var result []dto.PopularServices
+	// Сложный запрос с JOIN и GROUP BY
+	err := r.db.Table("visit_prescriptions").
+		Select("services.name as name, count(*) as count, sum(visit_prescriptions.unit_price * visit_prescriptions.quantity) as revenue").
+		Joins("join services on services.service_id = visit_prescriptions.service_id").
+		Joins("join visits on visits.visit_id = visit_prescriptions.visit_id").
+		Where("visits.visit_date BETWEEN ? AND ?", start, end).
+		Group("services.name").
+		Order("count DESC").
+		Limit(5).
+		Scan(&result).Error
+	return result, err
 }

@@ -1,0 +1,59 @@
+package service
+
+import (
+	"example/project/backend/dto"
+	"example/project/backend/repository"
+	"fmt"
+)
+
+type HealthJournalService interface {
+	GetPetHistory(petId int64) ([]dto.HealthJournalDTO, error)
+}
+
+type healthJournalService struct {
+	visitRepo  repository.VisitRepository
+	doctorRepo repository.DoctorRepository
+}
+
+func NewHealthJournalService(vr repository.VisitRepository, dr repository.DoctorRepository) HealthJournalService {
+	return &healthJournalService{
+		visitRepo:  vr,
+		doctorRepo: dr,
+	}
+}
+
+func (s *healthJournalService) GetPetHistory(petId int64) ([]dto.HealthJournalDTO, error) {
+	// 1. Получаем список визитов для питомца
+	visits, err := s.visitRepo.GetByPetID(petId)
+	if err != nil {
+		return nil, err
+	}
+
+	var history []dto.HealthJournalDTO
+
+	for _, v := range visits {
+		// 2. Получаем данные врача, чтобы узнать его ФИО
+		doctor, err := s.doctorRepo.GetByID(v.Appointment.DoctorID)
+		doctorName := "Врач не указан"
+		if err == nil {
+			doctorName = fmt.Sprintf("%s %s.", doctor.LastName, string(doctor.FirstName[0]))
+		}
+
+		// 3. Собираем DTO
+		item := dto.HealthJournalDTO{
+			VisitId:         v.VisitId,
+			Date:            v.Appointment.ScheduledAt.Format("02.01.2006"),
+			Time:            v.Appointment.ScheduledAt.Format("15:04"),
+			Doctor:          doctorName,
+			Diagnosis:       v.Diagnosis,
+			Details:         v.Anamnesis,
+			Analysis:        v.Analysis,
+			Recommendations: v.Recommendations,
+			Price:           fmt.Sprintf("%.2f ₽", v.TotalCost),
+		}
+
+		history = append(history, item)
+	}
+
+	return history, nil
+}
