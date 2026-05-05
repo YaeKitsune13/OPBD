@@ -9,7 +9,7 @@ type DailyRows struct {
 }
 
 type RevenueReportDTO struct {
-	PeriodTotal   int64     `json:"periodTotal"`
-	ServicesTotal int64     `json:"servicesTotal"`
-	DailyRows     DailyRows `json:"dailyRows"`
+	PeriodTotal   int64       `json:"periodTotal"`
+	ServicesTotal int64       `json:"servicesTotal"`
+	DailyRows     []DailyRows `json:"dailyRows"`
 }

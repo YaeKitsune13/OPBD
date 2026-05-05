@@ -6,9 +6,9 @@ import (
 )
 
 type NextAppointmentData struct {
-	DateTime   time.Time `json:"date_time"`
-	PetName    string    `json:"pet_name"`
-	DoctorName string    `json:"doctor_name"`
+	DateTime   time.Time `json:"dateTime"`
+	PetName    string    `json:"petName"`
+	DoctorName string    `json:"doctorName"`
 }
 
 type Pet struct {
@@ -20,10 +20,10 @@ type Pet struct {
 
 type DashboardDTO struct {
 	ClientName         string               `json:"client_name" binding:"required"`
-	PetsCount          int8                 `json:"pets_count"`
-	PendingApps        int32                `json:"pending_apps"`
-	TotalVisits        int32                `json:"total_visits"`
-	NextAppointment    NextAppointmentData  `json:"next_appointment"`
-	RecentAppointments []models.Appointment `json:"recent_appointments"`
-	PetsShort          []Pet                `json:"pets_short"`
+	PetsCount          int8                 `json:"petsCount"`
+	PendingApps        int32                `json:"pendingApps"`
+	TotalVisits        int32                `json:"totalVisits"`
+	NextAppointment    NextAppointmentData  `json:"nextAppointment"`
+	RecentAppointments []models.Appointment `json:"recentAppointments"`
+	PetsShort          []Pet                `json:"petsShort"`
 }

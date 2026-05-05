@@ -4,7 +4,7 @@ type MedicationStatus string
 
 const (
 	MedicationOk      MedicationStatus = "ok"
-	MediactionExpired MedicationStatus = "expired"
+	MedicationExpired MedicationStatus = "expired"
 )
 
 type MedicationItemDTO struct {
