@@ -19,7 +19,7 @@ type Pet struct {
 }
 
 type DashboardDTO struct {
-	ClientName         string               `json:"client_name" binding:"required"`
+	ClientName         string               `json:"clientName" binding:"required"`
 	PetsCount          int8                 `json:"petsCount"`
 	PendingApps        int32                `json:"pendingApps"`
 	TotalVisits        int32                `json:"totalVisits"`
