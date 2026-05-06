@@ -2,12 +2,14 @@ package service
 
 import (
 	"example/project/backend/dto"
+	"example/project/backend/models"
 	"example/project/backend/repository"
 	"fmt"
 )
 
 type HealthJournalService interface {
 	GetPetHistory(petId int64) ([]dto.HealthJournalDTO, error)
+	SaveVisit(data dto.ConductVisitDTO) error
 }
 
 type healthJournalService struct {
@@ -56,4 +58,16 @@ func (s *healthJournalService) GetPetHistory(petId int64) ([]dto.HealthJournalDT
 	}
 
 	return history, nil
+}
+
+func (s *healthJournalService) SaveVisit(data dto.ConductVisitDTO) error {
+	// Создаем модель визита на основе DTO
+	newVisit := &models.Visit{
+		AppointmentID: data.SelectedPet.Id, // Предположим, тут передаем ID записи
+		Anamnesis:     data.Anamnesis,
+		Diagnosis:     data.Diagnosis,
+		TotalCost:     float64(data.TotalCost),
+	}
+
+	return s.visitRepo.Create(newVisit)
 }

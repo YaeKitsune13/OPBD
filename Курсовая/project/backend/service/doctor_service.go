@@ -1,0 +1,27 @@
+package service
+
+import (
+	"example/project/backend/models"
+	"example/project/backend/repository"
+)
+
+type DoctorService interface {
+	GetBySpecialty(specialty string) ([]models.Doctor, error)
+	GetAll() ([]models.Doctor, error)
+}
+
+type doctorService struct {
+	repo repository.DoctorRepository
+}
+
+func NewDoctorService(repo repository.DoctorRepository) DoctorService {
+	return &doctorService{repo: repo}
+}
+
+func (s *doctorService) GetBySpecialty(specialty string) ([]models.Doctor, error) {
+	return s.repo.GetBySpecialty(specialty)
+}
+
+func (s *doctorService) GetAll() ([]models.Doctor, error) {
+	return s.repo.GetAll()
+}

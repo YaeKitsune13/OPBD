@@ -11,6 +11,7 @@ type DoctorRepository interface {
 	GetByID(id int64) (*models.Doctor, error)
 	GetByEmail(email string) (*models.Doctor, error)
 	GetAll() ([]models.Doctor, error)
+	GetBySpecialty(specialty string) ([]models.Doctor, error)
 }
 
 type doctorRepository struct {
@@ -40,5 +41,10 @@ func (r *doctorRepository) GetByEmail(email string) (*models.Doctor, error) {
 func (r *doctorRepository) GetAll() ([]models.Doctor, error) {
 	var doctors []models.Doctor
 	err := r.db.Find(&doctors).Error
+	return doctors, err
+}
+func (r *doctorRepository) GetBySpecialty(specialty string) ([]models.Doctor, error) {
+	var doctors []models.Doctor
+	err := r.db.Where("speciality = ?", specialty).Find(&doctors).Error
 	return doctors, err
 }

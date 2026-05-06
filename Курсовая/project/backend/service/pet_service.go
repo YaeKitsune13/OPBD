@@ -13,6 +13,9 @@ type PetService interface {
 	GetPetDetails(petId int64) (*dto.PetCardDTO, error)
 	AddPet(ownerId int64, data dto.PetCardDTO) error
 	UpdateWeight(petId int64, newWeight float64, doctorId *int64) error
+	UpdatePet(data dto.PetCardDTO) error
+	DeletePet(petId int64) error
+	GetWeightChartData(petId int64) ([]dto.WeightPointDTO, error)
 }
 
 type petService struct {
@@ -123,4 +126,46 @@ func getEmojiAvatar(species string) string {
 	default:
 		return "🐾"
 	}
+}
+
+// 5. Обновление основных данных (имя, порода и т.д.)
+func (s *petService) UpdatePet(data dto.PetCardDTO) error {
+	pet, err := s.petRepo.GetByID(data.PetId)
+	if err != nil {
+		return err
+	}
+
+	// Обновляем поля
+	pet.Nickname = data.Name
+	pet.Species = data.Species
+	pet.Breed = data.Breed
+	pet.BirthDate = data.Dob
+
+	return s.petRepo.Update(pet)
+}
+
+// 6. Удаление питомца
+func (s *petService) DeletePet(petId int64) error {
+	return s.petRepo.Delete(petId)
+}
+func (s *petService) GetWeightChartData(petId int64) ([]dto.WeightPointDTO, error) {
+	history, err := s.petRepo.GetWeightHistory(petId)
+	if err != nil {
+		return nil, err
+	}
+
+	var chartData []dto.WeightPointDTO
+	for _, h := range history {
+		point := dto.WeightPointDTO{
+			Label: h.MeasuredAt.Format("Jan"), // Например: "Apr"
+			Value: h.Weight,
+			Date:  h.MeasuredAt.Format("02.01.2006"),
+		}
+
+		// Если есть ID врача, можно добавить его имя (упростим для примера)
+		point.DoctorName = "Ветклиника"
+
+		chartData = append(chartData, point)
+	}
+	return chartData, nil
 }

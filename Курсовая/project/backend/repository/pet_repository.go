@@ -12,6 +12,8 @@ type PetRepository interface {
 	GetByOwnerID(ownerID int64) ([]models.Pet, error)
 	Update(pet *models.Pet) error
 	AddWeightRecord(record *models.WeightHistory) error
+	Delete(id int64) error
+	GetWeightHistory(petId int64) ([]models.WeightHistory, error)
 }
 
 type petRepository struct {
@@ -44,4 +46,14 @@ func (r *petRepository) Update(pet *models.Pet) error {
 
 func (r *petRepository) AddWeightRecord(record *models.WeightHistory) error {
 	return r.db.Create(record).Error
+}
+
+func (r *petRepository) Delete(id int64) error {
+	return r.db.Delete(&models.Pet{}, id).Error
+}
+func (r *petRepository) GetWeightHistory(petId int64) ([]models.WeightHistory, error) {
+	var history []models.WeightHistory
+	// Находим записи, подгружаем данные врача (если есть) и сортируем от старых к новым
+	err := r.db.Where("pet_id = ?", petId).Order("measured_at ASC").Find(&history).Error
+	return history, err
 }

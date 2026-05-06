@@ -1,0 +1,842 @@
+basePath: /
+definitions:
+  dto.AuthResponse:
+    properties:
+      role:
+        description: '"admin", "doctor", "client"'
+        type: string
+      token:
+        type: string
+      userId:
+        type: integer
+      userName:
+        type: string
+    type: object
+  dto.ConductVisitDTO:
+    properties:
+      anamnesis:
+        type: string
+      assignments:
+        items:
+          $ref: '#/definitions/dto.VisitAssignments'
+        type: array
+      diagnosis:
+        type: string
+      selectedPet:
+        $ref: '#/definitions/dto.SelectPet'
+      totalCost:
+        type: integer
+    type: object
+  dto.DashboardDTO:
+    properties:
+      clientName:
+        type: string
+      nextAppointment:
+        $ref: '#/definitions/dto.NextAppointmentData'
+      pendingApps:
+        type: integer
+      petsCount:
+        type: integer
+      petsShort:
+        items:
+          $ref: '#/definitions/dto.Pet'
+        type: array
+      recentAppointments:
+        items:
+          $ref: '#/definitions/models.Appointment'
+        type: array
+      totalVisits:
+        type: integer
+    required:
+    - clientName
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.NextAppointmentData:
+    properties:
+      dateTime:
+        type: string
+      doctorName:
+        type: string
+      petName:
+        type: string
+    type: object
+  dto.Pet:
+    properties:
+      breed:
+        type: string
+      name:
+        type: string
+      species:
+        type: string
+      weight:
+        type: number
+    type: object
+  dto.PetCardDTO:
+    properties:
+      avatar:
+        type: string
+      breed:
+        type: string
+      dob:
+        type: string
+      name:
+        type: string
+      petId:
+        type: integer
+      species:
+        type: string
+      weight:
+        type: number
+    required:
+    - name
+    - petId
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    type: object
+  dto.SelectPet:
+    properties:
+      avatar:
+        type: string
+      breed:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      owner:
+        type: string
+    type: object
+  dto.VisitAssignments:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+      qty:
+        type: integer
+      type:
+        type: string
+    type: object
+  models.Appointment:
+    properties:
+      appointment_id:
+        type: integer
+      comment:
+        type: string
+      created_at:
+        type: string
+      doctor_id:
+        type: integer
+      pet_id:
+        type: integer
+      scheduled_at:
+        type: string
+      status:
+        $ref: '#/definitions/models.Status'
+    type: object
+  models.Doctor:
+    properties:
+      doctor_id:
+        type: integer
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      password_hash:
+        type: string
+      phone:
+        type: string
+      speciality:
+        type: string
+    type: object
+  models.Medication:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      expiry_date:
+        type: string
+      medication_id:
+        type: integer
+      name:
+        type: string
+      price_per_unit:
+        type: number
+      status:
+        $ref: '#/definitions/models.MedicationStatus'
+    type: object
+  models.MedicationStatus:
+    enum:
+    - ok
+    - expired
+    type: string
+    x-enum-varnames:
+    - MedicationOK
+    - MedicationExpired
+  models.Status:
+    enum:
+    - waiting
+    - confirmed
+    - rejected
+    type: string
+    x-enum-varnames:
+    - StatusWaiting
+    - StatusConfirmed
+    - StatusRejected
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API для системы управления ветеринарной клиникой
+  title: Ветеринарная клиника API
+  version: "1.0"
+paths:
+  /api/admin/meds:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные медикамента
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Medication'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Добавить медикамент
+      tags:
+      - admin
+  /api/admin/revenue:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Отчёт по выручке
+      tags:
+      - admin
+  /api/admin/services/{id}:
+    delete:
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить услугу
+      tags:
+      - admin
+  /api/admin/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Общая статистика (KPI)
+      tags:
+      - admin
+  /api/appointments:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные записи
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Appointment'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать запись на приём
+      tags:
+      - appointments
+  /api/appointments/{id}:
+    delete:
+      parameters:
+      - description: ID записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Отменить запись
+      tags:
+      - appointments
+  /api/appointments/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новый статус
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить статус записи
+      tags:
+      - appointments
+  /api/appointments/owner/{ownerId}:
+    get:
+      parameters:
+      - description: ID владельца
+        in: path
+        name: ownerId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Appointment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Записи владельца
+      tags:
+      - appointments
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Вход в систему
+      tags:
+      - auth
+  /api/auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Выход из системы
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация нового пользователя
+      tags:
+      - auth
+  /api/dashboard/{ownerId}:
+    get:
+      parameters:
+      - description: ID владельца
+        in: path
+        name: ownerId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DashboardDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Данные дашборда владельца
+      tags:
+      - dashboard
+  /api/doctors:
+    get:
+      parameters:
+      - description: Специализация
+        in: query
+        name: specialty
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Doctor'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Список врачей (все или по специализации)
+      tags:
+      - doctors
+  /api/doctors/{id}/schedule:
+    get:
+      parameters:
+      - description: ID врача
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Appointment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Расписание врача на сегодня
+      tags:
+      - doctors
+  /api/pets:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID владельца
+        in: query
+        name: ownerId
+        required: true
+        type: integer
+      - description: Данные питомца
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PetCardDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Добавить питомца
+      tags:
+      - pets
+  /api/pets/{petId}:
+    delete:
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить питомца
+      tags:
+      - pets
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PetCardDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить данные питомца
+      tags:
+      - pets
+  /api/pets/owner/{ownerId}:
+    get:
+      parameters:
+      - description: ID владельца
+        in: path
+        name: ownerId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PetCardDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Список питомцев владельца
+      tags:
+      - pets
+  /api/visits:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные визита
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ConductVisitDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Сохранить карту визита
+      tags:
+      - visits
+  /api/visits/{id}:
+    get:
+      parameters:
+      - description: ID визита
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Детали визита
+      tags:
+      - visits
+  /api/visits/pet/{petId}:
+    get:
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ConductVisitDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Журнал здоровья питомца
+      tags:
+      - visits
+  /api/weight/pet/{petId}:
+    get:
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: История веса питомца
+      tags:
+      - weight
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      - description: Новый вес
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Добавить запись о весе
+      tags:
+      - weight
+swagger: "2.0"

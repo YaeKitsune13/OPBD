@@ -9,6 +9,7 @@ import (
 
 type AnalyticsService interface {
 	GetSummary() (*dto.AnalyticsSummaryDTO, error)
+	GetRevenueReport() (*dto.RevenueReportDTO, error)
 }
 
 type analyticsService struct {
@@ -117,4 +118,34 @@ func (s *analyticsService) GetSummary() (*dto.AnalyticsSummaryDTO, error) {
 	}
 
 	return summary, nil
+}
+func (s *analyticsService) GetRevenueReport() (*dto.RevenueReportDTO, error) {
+	now := time.Now()
+	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	end := start.AddDate(0, 1, 0)
+
+	visits, err := s.visitRepo.GetByPeriod(start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	report := &dto.RevenueReportDTO{}
+	dailyMap := make(map[string]*dto.DailyRows)
+
+	for _, v := range visits {
+		dateStr := v.VisitDate.Format("02.01")
+		report.PeriodTotal += int64(v.TotalCost)
+
+		if _, ok := dailyMap[dateStr]; !ok {
+			dailyMap[dateStr] = &dto.DailyRows{Date: dateStr}
+		}
+		// Здесь можно добавить детальный расчет по услугам/медикаментам
+		dailyMap[dateStr].Total = fmt.Sprintf("%.0f", v.TotalCost)
+	}
+
+	for _, row := range dailyMap {
+		report.DailyRows = append(report.DailyRows, *row)
+	}
+
+	return report, nil
 }
