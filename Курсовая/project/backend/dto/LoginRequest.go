@@ -1,5 +1,7 @@
 package dto
 
+import "example/project/backend/models"
+
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -14,8 +16,8 @@ type RegisterRequest struct {
 }
 
 type AuthResponse struct {
-	Token    string `json:"token"`
-	Role     string `json:"role"` // "admin", "doctor", "client"
-	UserName string `json:"userName"`
-	UserID   int64  `json:"userId"`
+	Token    string          `json:"token"`
+	Role     models.UserRole `json:"role"` // "admin", "doctor", "client"
+	UserName string          `json:"userName"`
+	UserID   int64           `json:"userId"`
 }
