@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, reactive } from "vue";
+import { useToast } from '../../utils/useToast'
+const { showToast } = useToast()
 
 const props = defineProps({
-    // Можно передать извне, показывать ли экран (например, если токен протух)
     modelValue: Boolean,
 });
 
 const emit = defineEmits(["update:modelValue", "login-success"]);
+
 // --- СОСТОЯНИЕ ---
 const activeTab = ref("login");
 
@@ -23,41 +25,157 @@ const regData = reactive({
     pass: "",
 });
 
-// --- ЛОГИКА ---
-function doLogin() {
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+
+function clearData() {
+    loginData.email = "";
+    loginData.pass = "";
+
+    regData.email = "";
+    regData.firstName = "";
+    regData.lastName = "";
+    regData.pass = "";
+    regData.phone = "";
+}
+
+/**
+ * Приводит телефон к формату +79991234567
+ */
+function normalizePhone(phone: string): string {
+    let digits = phone.replace(/\D/g, "");
+
+    if (digits.startsWith("8")) {
+        digits = "7" + digits.slice(1);
+    }
+
+    if (digits.length === 10) {
+        digits = "7" + digits;
+    }
+
+    if (digits.length === 11) {
+        return "+" + digits;
+    }
+
+    return phone;
+}
+
+// --- ОСНОВНАЯ ЛОГИКА ---
+
+async function doLogin() {
     if (!loginData.email || !loginData.pass) {
-        alert("Введите почту и пароль"); // Позже заменишь на красивый Toast
-
+        showToast("Введите почту и пароль", "info");
         return;
     }
-    let data = fetch("");
-    // Твоя логика имитации ролей
-    let role = "client";
-    if (loginData.email.includes("doctor")) role = "doctor";
-    if (loginData.email.includes("admin")) role = "admin";
 
-    finalizeLogin(role);
+    try {
+        const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: loginData.email,
+                password: loginData.pass,
+            }),
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            alert(result.error);
+            return;
+        }
+
+        if (result.token) {
+            // 1. Сохраняем сессию
+            localStorage.setItem("token", result.token);
+            localStorage.setItem(
+                "user",
+                JSON.stringify({
+                    id: result.userId,
+                    role: result.role,
+                    name: result.userName,
+                }),
+            );
+
+            // 2. Закрываем окно и уведомляем App.vue
+            finalizeLogin(result.role);
+            clearData();
+        }
+    } catch (e) {
+        showToast("Ошибка соединения с сервером","error");
+    }
 }
 
-function doRegister() {
-    if (!regData.firstName || !regData.email) {
-        alert("Заполните обязательные поля");
+async function doRegister() {
+    // 1. Обязательные поля
+    if (
+        !regData.firstName ||
+        !regData.lastName ||
+        !regData.email ||
+        !regData.pass
+    ) {
+        showToast("Заполните все обязательные поля (Имя, Фамилия, Email, Пароль)","info");
         return;
     }
-    finalizeLogin("client");
+
+    // 2. Валидация пароля (>= 8 символов)
+    if (regData.pass.length < 8) {
+        showToast("Безопасность: Пароль должен быть не менее 8 символов","info");
+        return;
+    }
+
+    // 3. Валидация Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(regData.email)) {
+        showToast("Введите корректный Email адрес","info");
+        return;
+    }
+
+    // 4. Валидация телефона (через регулярку разрешаем ввод со скобками/тире)
+    const phoneRegex =
+        /^(\+7|7|8)?[\s\-]?\(?[489][0-9]{2}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$/;
+    if (regData.phone && !phoneRegex.test(regData.phone)) {
+        showToast("Введите корректный номер телефона (например: +79001234567)","info");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: regData.email,
+                firstName: regData.firstName,
+                lastName: regData.lastName,
+                password: regData.pass,
+                phone: normalizePhone(regData.phone), // Отправляем чистые данные
+            }),
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            showToast(result.error, "error");
+            return;
+        }
+
+        showToast("Регистрация успешна! Теперь вы можете войти.","success");
+        activeTab.value = "login";
+        clearData();
+    } catch (e) {
+        showToast("Ошибка при регистрации","error");
+    }
 }
 
-function quickLogin(role) {
-    finalizeLogin(role);
-}
-
-function finalizeLogin(role) {
-    // 1. Сообщаем родителю роль
+function finalizeLogin(role: string) {
     emit("login-success", role);
-    // 2. Закрываем окно (через v-model если используешь в App.vue)
     emit("update:modelValue", false);
 
-    // Очистка паролей для безопасности
     loginData.pass = "";
     regData.pass = "";
 }
@@ -171,20 +289,6 @@ function finalizeLogin(role) {
                     >
                 </div>
             </div>
-        </div>
-
-        <!-- БАР ДЛЯ РАЗРАБОТКИ -->
-        <div class="auth-devbar">
-            <span class="auth-devbar-label">dev / быстрый вход:</span>
-            <button class="dev-btn client" @click="quickLogin('client')">
-                👤 Клиент
-            </button>
-            <button class="dev-btn doctor" @click="quickLogin('doctor')">
-                🩺 Врач
-            </button>
-            <button class="dev-btn admin" @click="quickLogin('admin')">
-                🔑 Администратор
-            </button>
         </div>
     </div>
 </template>
@@ -358,35 +462,5 @@ function finalizeLogin(role) {
     color: var(--text3);
     font-family: var(--mono);
     white-space: nowrap;
-}
-
-.dev-btn {
-    padding: 6px 14px;
-    border-radius: var(--radius);
-    font-family: var(--font);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid var(--border2);
-    background: var(--surface2);
-    color: var(--text2);
-    transition: all 0.15s;
-}
-
-.dev-btn:hover {
-    color: var(--text);
-    border-color: var(--accent);
-}
-.dev-btn.client {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-.dev-btn.doctor {
-    border-color: var(--blue);
-    color: var(--blue);
-}
-.dev-btn.admin {
-    border-color: var(--yellow);
-    color: var(--yellow);
 }
 </style>

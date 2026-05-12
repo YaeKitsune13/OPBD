@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"log"
+	"os"
+	"strings"
 
 	"example/project/backend"
 	"example/project/backend/handler"
@@ -15,13 +18,35 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+const filename = ".env"
+
 // @title           Ветеринарная клиника API
 // @version         1.0
 // @description     REST API для системы управления ветеринарной клиникой
 // @host            localhost:8080
 // @BasePath        /
 func main() {
-	// 1. Подключение к базе данных через твой пакет backend
+	file, err := os.Open(filename)
+	if err != nil {
+		// Здесь лучше просто вывести предупреждение, вдруг переменные заданы в системе напрямую
+		log.Println("Предупреждение: Файл .env не найден, используем системные переменные")
+	} else {
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				os.Setenv(parts[0], parts[1])
+			}
+		}
+		file.Close() // Закрываем сразу после чтения
+		log.Println("Конфигурация из .env загружена")
+	}
+
+	// (теперь ConnectDB увидит переменные, если они там используются)
 	db, err := backend.ConnectDB()
 	if err != nil {
 		log.Fatalf("Ошибка подключения к БД: %v", err)

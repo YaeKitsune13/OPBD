@@ -1,64 +1,73 @@
 <script setup>
-import { ref, computed, defineAsyncComponent, watch, nextTick } from 'vue'
+import { ref, computed, defineAsyncComponent, watch, nextTick, onMounted } from 'vue'
 import TopBar from './ui/TopBar.vue'
 import SideBar from './ui/SideBar.vue'
 import PrintZone from './ui/PrintZone.vue'
 import ProfilePanel from './ui/ProfilePanel.vue'
 
-const props = defineProps(['initialRole'])
+// Принимаем данные из App.vue
+const props = defineProps({
+  userRole: String,
+  userName: String
+})
 const emit = defineEmits(['logout'])
 
 // --- СОСТОЯНИЕ ---
-const role = ref(props.initialRole)
-const currentPage = ref('dashboard')
+const role = ref(props.userRole)
+const currentPage = ref('') // Инициализируем пустотой, настроим в onMounted
 const mobileMenu = ref(false)
 const isProfileOpen = ref(false)
 
-// Данные для печати
-const printData = ref({
-  pet: null,
-  visits: [],
-  type: 'history',
-})
-
-// --- ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (Добавлено) ---
-// Вычисляем данные профиля на основе текущей роли
+// --- ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (Динамические) ---
 const currentUser = computed(() => {
-  const configs = {
-    client: {
-      name: 'Иванов Иван Иванович',
-      avatar: 'ИВ',
-      roleName: 'Клиент',
-      email: 'ivanov@mail.ru',
-      phone: '+7 (900) 123-45-67',
-    },
-    doctor: {
-      name: 'Кузнецов Андрей Владимирович',
-      avatar: 'КА',
-      roleName: 'Ветеринарный врач',
-      email: 'dr.kuznetsov@vet.ru',
-      phone: '+7 (900) 777-88-99',
-    },
-    admin: {
-      name: 'Администратор системы',
-      avatar: 'АД',
-      roleName: 'Администратор',
-      email: 'admin@vet.ru',
-      phone: '+7 (900) 000-00-01',
-    },
+  // Названия ролей для отображения в профиле
+  const roleLabels = {
+    admin: 'Администратор',
+    doctor: 'Врач',
+    client: 'Клиент'
   }
-  return configs[role.value] || configs.client
+
+  // Генерация аватара из инициалов (Иван Иванов -> ИИ)
+  const getInitials = (name) => {
+    if (!name) return '??'
+    const parts = name.split(' ')
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+    return name[0].toUpperCase()
+  }
+
+  return {
+    name: props.userName || 'Пользователь',
+    avatar: getInitials(props.userName),
+    roleName: roleLabels[role.value] || 'Пользователь',
+    // Эти данные можно будет тоже прокинуть через props, если добавишь в БД
+    email: '---', 
+    phone: '---',
+  }
 })
 
-// Следим за изменением роли извне
-watch(
-  () => props.initialRole,
-  (newRole) => {
-    if (newRole) updateRole(newRole)
-  },
-)
+// Установка начальной страницы при загрузке
+onMounted(() => {
+  setInitialPage(props.userRole)
+})
 
-// --- ЛЕНИВАЯ ЗАГРУЗКА ---
+// Следим за изменением роли (например, если админ переключил режим)
+watch(() => props.userRole, (newRole) => {
+  if (newRole) {
+    role.value = newRole
+    setInitialPage(newRole)
+  }
+})
+
+function setInitialPage(currentRole) {
+  const firstPages = { 
+    client: 'dashboard', 
+    doctor: 'today', 
+    admin: 'analytics' 
+  }
+  currentPage.value = firstPages[currentRole] || 'dashboard'
+}
+
+// --- ЛЕНИВАЯ ЗАГРУЗКА СТРАНИЦ ---
 const DashboardPage = defineAsyncComponent(() => import('./pages/client/DashboardPage.vue'))
 const PetsPage = defineAsyncComponent(() => import('./pages/client/PetsPage.vue'))
 const AppointmentsPage = defineAsyncComponent(() => import('./pages/client/AppointmentsPage.vue'))
@@ -75,18 +84,17 @@ const RevenuePage = defineAsyncComponent(() => import('./pages/admin/RevenuePage
 const ServicesPage = defineAsyncComponent(() => import('./pages/admin/ServicesPage.vue'))
 const MedsPage = defineAsyncComponent(() => import('./pages/admin/MedsPage.vue'))
 
-// Метод смены роли
+// Метод смены роли (для тестов или админа)
 function updateRole(newRole) {
   role.value = newRole
-  const firstPages = { client: 'dashboard', doctor: 'today', admin: 'analytics' }
-  currentPage.value = firstPages[newRole]
+  setInitialPage(newRole)
 }
 
+// Печать
+const printData = ref({ pet: null, visits: [], type: 'history' })
 function triggerPrint(data) {
   printData.value = data
-  nextTick(() => {
-    window.print()
-  })
+  nextTick(() => { window.print() })
 }
 </script>
 
