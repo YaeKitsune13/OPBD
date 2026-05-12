@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 import Auth from "./components/screens/Auth.vue";
 import Main from "./components/Main.vue";
