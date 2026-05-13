@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import BaseModal from '../../ui/BaseModal.vue'
 import { useToast } from '../../../utils/useToast'
 
@@ -7,13 +7,24 @@ const { showToast } = useToast()
 
 const users = ref([])
 const loading = ref(false)
-const isDoctorModalOpen = ref(false)
 
-// Данные для модалки назначения врача
-const selectedUser = ref(null)
-const speciality = ref('')
+// Состояние для модалок
+const isAddDoctorModalOpen = ref(false)
+const isDeleteModalOpen = ref(false)
+const userToDelete = ref(null)
 
-// 1. Загрузка всех пользователей
+// Форма нового врача
+const doctorForm = reactive({
+  first_name: '',
+  last_name: '',
+  middle_name: '',
+  email: '',
+  phone: '',
+  password: '',
+  speciality: ''
+})
+
+// 1. Загрузка пользователей
 async function loadUsers() {
   const token = localStorage.getItem('token')
   try {
@@ -28,56 +39,66 @@ async function loadUsers() {
   }
 }
 
-// 2. Открытие модалки
-function openPromoteModal(user) {
-  selectedUser.value = user
-  speciality.value = ''
-  isDoctorModalOpen.value = true
-}
-
-// 3. Процесс превращения в врача
-async function promoteToDoctor() {
-  if (!speciality.value) return
-  
+// 2. Добавление нового врача
+async function createDoctor() {
   loading.value = true
   const token = localStorage.getItem('token')
-  const userId = selectedUser.value.user_id
-
+  
   try {
-    // Шаг А: Меняем роль пользователя на 'doctor'
-    const roleRes = await fetch(`/api/admin/users/${userId}/role`, {
-      method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-      body: JSON.stringify({ role: 'doctor' })
-    })
-
-    // Шаг Б: Создаем запись в таблице врачей
-    const docRes = await fetch('/api/admin/doctors', {
+    const response = await fetch('/api/admin/doctors/create-full', { // Предполагаемый эндпоинт для создания "под ключ"
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}` 
       },
-      body: JSON.stringify({
-        user_id: userId,
-        speciality: speciality.value
-      })
+      body: JSON.stringify(doctorForm)
     })
 
-    if (roleRes.ok && docRes.ok) {
-      showToast("Пользователь теперь врач!", "success")
-      isDoctorModalOpen.value = false
-      await loadUsers() // Обновляем список
+    if (response.ok) {
+      showToast("Врач успешно добавлен", "success")
+      isAddDoctorModalOpen.value = false
+      // Сброс формы
+      Object.assign(doctorForm, { first_name: '', last_name: '', middle_name: '', email: '', phone: '', password: '', speciality: '' })
+      await loadUsers()
     } else {
-      showToast("Ошибка при сохранении данных", "error")
+      showToast("Ошибка при создании врача", "error")
     }
   } catch (e) {
-    showToast("Ошибка соединения с сервером", "error")
+    showToast("Ошибка соединения", "error")
   } finally {
     loading.value = false
+  }
+}
+
+// 3. Удаление пользователя
+function confirmDelete(user) {
+  userToDelete.value = user
+  isDeleteModalOpen.value = true
+}
+
+async function deleteUser() {
+  if (!userToDelete.value) return
+  
+  loading.value = true
+  const token = localStorage.getItem('token')
+  try {
+    const response = await fetch(`/api/admin/users/${userToDelete.value.user_id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+
+    if (response.ok) {
+      showToast("Пользователь удален", "success")
+      isDeleteModalOpen.value = false
+      await loadUsers()
+    } else {
+      showToast("Не удалось удалить пользователя", "error")
+    }
+  } catch (e) {
+    showToast("Ошибка при удалении", "error")
+  } finally {
+    loading.value = false
+    userToDelete.value = null
   }
 }
 
@@ -89,8 +110,12 @@ onMounted(loadUsers)
     <div class="page-header">
       <div>
         <div class="page-title">Управление пользователями</div>
-        <div class="page-sub">Список всех аккаунтов и управление ролями</div>
+        <div class="page-sub">Список всех аккаунтов и управление доступом</div>
       </div>
+      <!-- КНОПКА ДОБАВИТЬ ДОКТОРА -->
+      <button class="btn btn-primary" @click="isAddDoctorModalOpen = true">
+        + Добавить врача
+      </button>
     </div>
 
     <div class="card">
@@ -125,13 +150,12 @@ onMounted(loadUsers)
                 </span>
               </td>
               <td style="text-align: right">
-                <!-- Кнопка видна только для обычных клиентов -->
+                <!-- ЗАМЕНЕНА КНОПКА НА УДАЛЕНИЕ -->
                 <button 
-                  v-if="user.role === 'client'"
-                  class="btn btn-ghost btn-sm"
-                  @click="openPromoteModal(user)"
+                  class="btn btn-ghost btn-sm btn-danger"
+                  @click="confirmDelete(user)"
                 >
-                  ✚ Сделать врачом
+                  🗑 Удалить
                 </button>
               </td>
             </tr>
@@ -140,35 +164,55 @@ onMounted(loadUsers)
       </div>
     </div>
 
-    <!-- Модалка назначения специализации -->
-    <BaseModal :show="isDoctorModalOpen" title="Назначить врачом" @close="isDoctorModalOpen = false">
-      <div v-if="selectedUser" style="margin-bottom: 20px">
-        <p style="font-size: 14px; color: var(--text2)">
-          Вы переводите пользователя <b>{{ selectedUser.last_name }} {{ selectedUser.first_name }}</b> в статус врача.
-        </p>
-      </div>
-
-      <div class="form-group">
-        <label>Выберите специализацию *</label>
-        <select v-model="speciality">
-          <option value="">-- Выберите из списка --</option>
-          <option>Терапевт</option>
-          <option>Хирург</option>
-          <option>Офтальмолог</option>
-          <option>Кардиолог</option>
-          <option>Дерматолог</option>
-          <option>Стоматолог</option>
-        </select>
+    <!-- Модалка добавления врача -->
+    <BaseModal :show="isAddDoctorModalOpen" title="Новый врач" @close="isAddDoctorModalOpen = false">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Фамилия</label>
+          <input v-model="doctorForm.last_name" type="text" placeholder="Иванов">
+        </div>
+        <div class="form-group">
+          <label>Имя</label>
+          <input v-model="doctorForm.first_name" type="text" placeholder="Иван">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input v-model="doctorForm.email" type="email" placeholder="example@mail.com">
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input v-model="doctorForm.password" type="password" placeholder="******">
+        </div>
+        <div class="form-group">
+          <label>Специализация</label>
+          <select v-model="doctorForm.speciality">
+            <option value="">-- Выберите --</option>
+            <option>Терапевт</option>
+            <option>Хирург</option>
+            <option>Кардиолог</option>
+            <option>Стоматолог</option>
+          </select>
+        </div>
       </div>
 
       <template #footer>
-        <button class="btn btn-ghost" @click="isDoctorModalOpen = false">Отмена</button>
-        <button 
-          class="btn btn-primary" 
-          :disabled="!speciality || loading" 
-          @click="promoteToDoctor"
-        >
-          {{ loading ? 'Сохранение...' : 'Подтвердить назначение' }}
+        <button class="btn btn-ghost" @click="isAddDoctorModalOpen = false">Отмена</button>
+        <button class="btn btn-primary" :disabled="loading" @click="createDoctor">
+          {{ loading ? 'Создание...' : 'Создать врача' }}
+        </button>
+      </template>
+    </BaseModal>
+
+    <!-- Модалка подтверждения удаления -->
+    <BaseModal :show="isDeleteModalOpen" title="Подтверждение удаления" @close="isDeleteModalOpen = false">
+      <p v-if="userToDelete">
+        Вы уверены, что хотите удалить пользователя <b>{{ userToDelete.last_name }} {{ userToDelete.first_name }}</b>?
+        Это действие необратимо.
+      </p>
+      <template #footer>
+        <button class="btn btn-ghost" @click="isDeleteModalOpen = false">Отмена</button>
+        <button class="btn btn-danger" :disabled="loading" @click="deleteUser">
+          {{ loading ? 'Удаление...' : 'Да, удалить' }}
         </button>
       </template>
     </BaseModal>
@@ -176,8 +220,29 @@ onMounted(loadUsers)
 </template>
 
 <style scoped>
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
 .badge-priority {
   background: #fef3c7;
   color: #92400e;
+}
+.btn-danger {
+  color: #dc2626;
+}
+.btn-danger:hover {
+  background: #fee2e2;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+/* Чтобы некоторые поля были на всю ширину */
+.form-group:nth-child(5) {
+  grid-column: span 2;
 }
 </style>

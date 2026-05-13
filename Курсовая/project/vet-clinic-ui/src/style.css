@@ -1,6 +1,5 @@
 /* ── FONTS ── */
 @import url("https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
-
 /* ── VARIABLES (LIGHT-GREY THEME) ── */
 :root {
     /* Основные фоны: не чисто белые, а мягкие серые */
@@ -32,6 +31,32 @@
     --blue-dim: rgba(59, 130, 246, 0.1);
 
     /* Геометрия остается прежней */
+    --sidebar-w: 220px;
+    --topbar-h: 52px;
+    --radius: 6px;
+    --font: "Onest", sans-serif;
+    --mono: "JetBrains Mono", monospace;
+}
+/* ── VARIABLES (Dark THEME) ── */
+:root {
+    --bg: #0e0f11;
+    --surface: #16181c;
+    --surface2: #1c1f25;
+    --surface3: #22262e;
+    --border: #2a2e38;
+    --border2: #333844;
+    --text: #e8eaf0;
+    --text2: #9aa0b0;
+    --text3: #5c6270;
+    --accent: #4ade80;
+    --accent-dim: rgba(74, 222, 128, 0.12);
+    --accent-glow: rgba(74, 222, 128, 0.25);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.12);
+    --yellow: #fbbf24;
+    --yellow-dim: rgba(251, 191, 36, 0.12);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96, 165, 250, 0.12);
     --sidebar-w: 220px;
     --topbar-h: 52px;
     --radius: 6px;

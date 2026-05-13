@@ -1,26 +1,29 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
+import { useToast } from '../../../utils/useToast';
+const { showToast } = useToast();
 
-const appointments = ref([
-  {
-    id: 1042,
-    pet: '🐱 Барсик',
-    doctor: 'Кузнецов А.В.',
-    spec: 'Терапевт',
-    date: '02.05.2026',
-    time: '10:30',
-    status: 'waiting',
-  },
-  {
-    id: 1038,
-    pet: '🐶 Рыжик',
-    doctor: 'Попова М.С.',
-    spec: 'Хирург',
-    date: '10.05.2026',
-    time: '14:00',
-    status: 'confirmed',
-  },
-])
+const appointments = ref([])
+
+async function loadAppoinments() {
+  const token = localStorage.getItem('token');
+  const userRaw = localStorage.getItem('user');
+  if (!userRaw) return;
+
+  const userData = JSON.parse(userRaw);
+  const userId = userData.user_id || userData.id;
+  try {
+    const appointmentsRes = await fetch(`/api/appointments/owner/${userId}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (appointmentsRes.ok) appointments.value = await appointmentsRes.json();
+    console.log(appointments.value);
+  } catch (e) {
+    showToast("Ошибка при загрузке данных", "error")
+  }
+}
+
+loadAppoinments()
 
 function cancel(id) {
   alert('Запись #' + id + ' будет отменена')
@@ -54,11 +57,11 @@ function cancel(id) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="app in appointments" :key="app.id">
-              <td class="mono text-muted">#{{ app.id }}</td>
-              <td class="td-main">{{ app.pet }}</td>
-              <td>{{ app.doctor }} · {{ app.spec }}</td>
-              <td class="mono">{{ app.date }} · {{ app.time }}</td>
+            <tr v-for="(app, index) in appointments" :key="app.id">
+              <td class="mono text-muted"># {{ index+1 }}</td>
+              <td class="td-main">{{ app.petLabel }}</td>
+              <td>{{ app.doctorName }} · {{ app.specialty }}</td>
+              <td class="mono">{{ app.scheduledDate }} · {{ app.scheduledTime }}</td>
               <td>
                 <span v-if="app.status === 'waiting'" class="badge badge-waiting">Ожидание</span>
                 <span v-else class="badge badge-confirmed">Подтверждено</span>

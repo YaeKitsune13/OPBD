@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue' // Добавили watch
 import { useToast } from '../../../utils/useToast';
 import { useAuth } from '../../../utils/useAuth';
 
@@ -9,79 +9,106 @@ const { logout } = useAuth();
 
 // --- СОСТОЯНИЕ ---
 const pets = ref([])
-const doctors = ref([]) // Теперь это массив объектов с сервера
+const doctors = ref([])
 const loading = ref(false)
+const busySlots = ref([]) // Массив занятых часов с сервера, напр. ["09:00", "10:30"]
+
+const timeSlots = [
+  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"
+];
 
 const appointmentForm = reactive({
   petId: '',
   doctorId: '',
   specialization: '',
   date: '',
+  time: '',
   comment: ''
 })
+
+// --- ЛОГИКА ЗАНЯТЫХ СЛОТОВ ---
+
+async function fetchBusySlots() {
+  // Если врач или дата не выбраны — очищаем список занятых часов
+  if (!appointmentForm.doctorId || !appointmentForm.date) {
+    busySlots.value = [];
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(
+      `/api/appointments/busy-slots?doctor_id=${appointmentForm.doctorId}&date=${appointmentForm.date}`,
+      { headers: { "Authorization": `Bearer ${token}` } }
+    );
+    
+    if (response.ok) {
+      busySlots.value = await response.json(); // Получаем ["09:30", "14:00"]
+    }
+  } catch (e) {
+    console.error("Ошибка при получении занятых слотов:", e);
+  }
+}
+
+// Следим за врачом и датой: если они меняются, сбрасываем выбранное время и ищем занятые часы
+watch(() => [appointmentForm.doctorId, appointmentForm.date], () => {
+  appointmentForm.time = '';
+  fetchBusySlots();
+});
 
 // --- ЛОГИКА ЗАГРУЗКИ ДАННЫХ ---
 
 async function fetchData() {
   const token = localStorage.getItem('token');
-  const userData = JSON.parse(localStorage.getItem('user'));
-  if (!userData) return;
+  const userRaw = localStorage.getItem('user');
+  if (!userRaw) return;
+
+  const userData = JSON.parse(userRaw);
+  const userId = userData.user_id || userData.id;
 
   try {
-    // 1. Загружаем питомцев
-    const petsRes = await fetch(`/api/pets/owner/${userData.id}`, {
+    const petsRes = await fetch(`/api/pets/owner/${userId}`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
     if (petsRes.ok) pets.value = await petsRes.json();
 
-    // 2. Загружаем врачей
     const docsRes = await fetch(`/api/doctors`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
-    
-    if (docsRes.ok) {
-      const data = await docsRes.json(); // Сначала получаем данные в переменную
-      console.log("Врачи с сервера:", data); // Теперь console.log сработает
-      doctors.value = data; 
-    }
-
+    if (docsRes.ok) doctors.value = await docsRes.json();
   } catch (e) {
-    console.error(e);
     showToast("Ошибка при загрузке данных", "error");
   }
 }
 
 const filteredDoctors = computed(() => {
   if (!appointmentForm.specialization) return [];
-  // В Go поле называется speciality
   return doctors.value.filter(d => d.speciality === appointmentForm.specialization);
 });
 
-// Список уникальных специализаций для селекта
 const specializations = computed(() => {
-  // В Go поле называется speciality
   const specs = doctors.value.map(d => d.speciality);
-  return [...new Set(specs)].filter(Boolean); // filter(Boolean) уберет пустые значения
+  return [...new Set(specs)].filter(Boolean);
 });
 
 // --- ОТПРАВКА ЗАЯВКИ ---
 
 async function sendRequest() {
-  // Валидация
-  if (!appointmentForm.petId || !appointmentForm.doctorId || !appointmentForm.date) {
-    showToast("Пожалуйста, заполните все обязательные поля", "warning");
+  if (!appointmentForm.petId || !appointmentForm.doctorId || !appointmentForm.date || !appointmentForm.time) {
+    showToast("Выберите время приема", "warning");
     return;
   }
 
   const token = localStorage.getItem('token');
   loading.value = true;
 
-  const payload = {
-    petId: Number(appointmentForm.petId),
-    doctorId: Number(appointmentForm.doctorId),
-    appointmentDate: appointmentForm.date, // "2024-05-20"
-    description: appointmentForm.comment,
-    status: "scheduled"
+   const payload = {
+    pet_id: Number(appointmentForm.petId),
+    doctor_id: Number(appointmentForm.doctorId),
+    scheduled_at: `${appointmentForm.date}T${appointmentForm.time}:00Z`, 
+    comment: appointmentForm.comment,
+    status: "waiting"
   };
 
   try {
@@ -96,10 +123,12 @@ async function sendRequest() {
 
     if (response.ok) {
       showToast("Запись успешно создана!", "success");
-      emit('navigate', 'appointments'); // Переход к списку записей
+      emit('navigate', 'appointments');
     } else {
       const err = await response.json();
-      showToast(err.error || "Ошибка при записи", "error");
+      showToast(err.error || "Ошибка", "error");
+      // Если ошибка "занято", обновляем список слотов
+      fetchBusySlots();
     }
   } catch (e) {
     showToast("Ошибка соединения с сервером", "error");
@@ -123,18 +152,19 @@ onMounted(fetchData);
     <div class="card">
       <div class="card-body">
         <div class="form-grid">
-          <!-- ПИТОМЕЦ -->
+
+          <!-- ВЫБОР ПИТОМЦА -->
           <div class="form-group">
             <label>Питомец *</label>
             <select v-model="appointmentForm.petId">
               <option value="">— Выберите питомца —</option>
               <option v-for="pet in pets" :key="pet.petId" :value="pet.petId">
-                {{ pet.avatar }} {{ pet.name }}
+                {{ pet.avatar || '🐾' }} {{ pet.name }}
               </option>
             </select>
           </div>
 
-          <!-- СПЕЦИАЛИЗАЦИЯ -->
+          <!-- ВЫБОР СПЕЦИАЛИЗАЦИИ -->
           <div class="form-group">
             <label>Специализация *</label>
             <select v-model="appointmentForm.specialization" @change="appointmentForm.doctorId = ''">
@@ -145,29 +175,50 @@ onMounted(fetchData);
             </select>
           </div>
 
-          <!-- ВРАЧ -->
+          <!-- ВЫБОР ВРАЧА -->
           <div class="form-group">
             <label>Врач *</label>
             <select v-model="appointmentForm.doctorId" :disabled="!appointmentForm.specialization">
               <option value="">— Выберите врача —</option>
-              <!-- 1. Используем doc.doctor_id вместо doc.id -->
-              <!-- 2. Используем данные из вложенного объекта user для имени -->
               <option v-for="doc in filteredDoctors" :key="doc.doctor_id" :value="doc.doctor_id">
-                {{ doc.user.last_name }} {{ doc.user.first_name }}
+                {{ doc.user?.last_name }} {{ doc.user?.first_name }}
               </option>
             </select>
           </div>
 
-          <!-- ДАТА -->
+          <!-- ВЫБОР ДАТЫ -->
           <div class="form-group">
             <label>Дата приёма *</label>
-            <input v-model="appointmentForm.date" type="date" :min="new Date().toISOString().split('T')[0]" />
+            <input 
+              v-model="appointmentForm.date" 
+              type="date" 
+              :min="new Date().toISOString().split('T')[0]" 
+            />
+          </div>
+
+          <!-- ВЫБОР ВРЕМЕНИ -->
+          <div class="form-group">
+            <label>Время приема *</label>
+            <select 
+              v-model="appointmentForm.time" 
+              :disabled="!appointmentForm.date || !appointmentForm.doctorId"
+            >
+              <option value="">--:--</option>
+              <option 
+                v-for="slot in timeSlots" 
+                :key="slot" 
+                :value="slot"
+                :disabled="busySlots.includes(slot)"
+              >
+                {{ slot }} {{ busySlots.includes(slot) ? '(Занято)' : '' }}
+              </option>
+            </select>
           </div>
 
           <!-- КОММЕНТАРИЙ -->
           <div class="form-group full">
             <label>Комментарий / Жалобы</label>
-            <textarea v-model="appointmentForm.comment" placeholder="Опишите проблему..."></textarea>
+            <textarea v-model="appointmentForm.comment" placeholder="Опишите симптомы..."></textarea>
           </div>
         </div>
 
@@ -180,3 +231,14 @@ onMounted(fetchData);
     </div>
   </div>
 </template>
+
+<style scoped>
+.mt-12 { margin-top: 24px; }
+.form-group.full { grid-column: 1 / -1; }
+
+/* Стилизация для заблокированных опций (поддерживается не всеми браузерами, но полезно) */
+option:disabled {
+  color: #a0a0a0;
+  background-color: #f0f0f0;
+}
+</style>
