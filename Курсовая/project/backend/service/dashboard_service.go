@@ -11,20 +11,20 @@ type DashboardService interface {
 }
 
 type dashboardService struct {
-	ownerRepo       repository.OwnerRepository
+	userRepo        repository.UserRepository
 	petRepo         repository.PetRepository
 	appointmentRepo repository.AppointmentRepository
 	visitRepo       repository.VisitRepository // Добавили для подсчета посещений
 }
 
 func NewDashboardService(
-	or repository.OwnerRepository,
+	or repository.UserRepository,
 	pr repository.PetRepository,
 	ar repository.AppointmentRepository,
 	vr repository.VisitRepository,
 ) DashboardService {
 	return &dashboardService{
-		ownerRepo:       or,
+		userRepo:        or,
 		petRepo:         pr,
 		appointmentRepo: ar,
 		visitRepo:       vr,
@@ -33,7 +33,7 @@ func NewDashboardService(
 
 func (s *dashboardService) GetDashboardData(ownerID int64) (*dto.DashboardDTO, error) {
 	// 1. Получаем владельца
-	owner, err := s.ownerRepo.GetByID(ownerID)
+	owner, err := s.userRepo.GetByID(ownerID)
 	if err != nil {
 		return nil, err
 	}

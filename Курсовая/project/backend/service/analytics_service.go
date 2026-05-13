@@ -92,8 +92,15 @@ func (s *analyticsService) GetSummary() (*dto.AnalyticsSummaryDTO, error) {
 			status = "Medium"
 		}
 
+		// Инициал имени (первая буква)
+		firstInitial := ""
+		if len(d.User.FirstName) > 0 {
+			firstInitial = string([]rune(d.User.FirstName)[0]) // Используем rune для корректной работы с кириллицей
+		}
+
 		docLoads = append(docLoads, dto.DoctorLoad{
-			Name:       fmt.Sprintf("%s %s.", d.LastName, string(d.FirstName[0])),
+			// ИСПРАВЛЕНИЕ: обращаемся через d.User
+			Name:       fmt.Sprintf("%s %s.", d.User.LastName, firstInitial),
 			VisitCount: count,
 			LoadStatus: status,
 		})

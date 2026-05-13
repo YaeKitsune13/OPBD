@@ -18,7 +18,7 @@ func ConnectDB() (*gorm.DB, error) {
 	}
 
 	err = db.AutoMigrate(
-		&models.Owner{},
+		&models.User{},
 		&models.Doctor{},
 		&models.Service{},
 		&models.Medication{},
@@ -35,7 +35,7 @@ func ConnectDB() (*gorm.DB, error) {
 	// Добавляем FK вручную
 	fkQueries := []string{
 		// pets -> owners
-		`ALTER TABLE pets ADD CONSTRAINT fk_pets_owner FOREIGN KEY (owner_id) REFERENCES owners(owner_id) ON UPDATE CASCADE ON DELETE CASCADE`,
+		`ALTER TABLE pets ADD CONSTRAINT fk_pets_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE`,
 		// appointments -> pets
 		`ALTER TABLE appointments ADD CONSTRAINT fk_appointments_pet FOREIGN KEY (pet_id) REFERENCES pets(pet_id) ON UPDATE CASCADE ON DELETE CASCADE`,
 		// appointments -> doctors
@@ -54,6 +54,8 @@ func ConnectDB() (*gorm.DB, error) {
 		`ALTER TABLE weight_histories ADD CONSTRAINT fk_weight_histories_visit FOREIGN KEY (visit_id) REFERENCES visits(visit_id) ON UPDATE CASCADE ON DELETE SET NULL`,
 		// weight_histories -> doctors
 		`ALTER TABLE weight_histories ADD CONSTRAINT fk_weight_histories_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON UPDATE CASCADE ON DELETE SET NULL`,
+		// doctor -> users
+		`ALTER TABLE doctors ADD CONSTRAINT fk_doctors_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE`,
 	}
 
 	for _, q := range fkQueries {

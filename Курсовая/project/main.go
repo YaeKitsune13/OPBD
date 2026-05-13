@@ -8,6 +8,7 @@ import (
 
 	"example/project/backend"
 	"example/project/backend/handler"
+	"example/project/backend/middleware"
 	"example/project/backend/repository"
 	"example/project/backend/service"
 	_ "example/project/docs" // автогенерированные файлы
@@ -96,68 +97,80 @@ func main() {
 		c.Next()
 	})
 
-	// 6. Роутинг (согласно таблице 2.1)
+	// 6. Роутинг
 	api := r.Group("/api")
 	{
-		// AuthController
+		// --- ПУБЛИЧНЫЕ РОУТЫ ---
 		auth := api.Group("/auth")
 		{
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/register", authHandler.Register)
-			auth.POST("/logout", authHandler.Logout)
 		}
 
-		// PetController
-		pets := api.Group("/pets")
+		// --- ЗАЩИЩЕННЫЕ РОУТЫ (Требуется любой валидный токен) ---
+		protected := api.Group("/")
+		protected.Use(middleware.AuthMiddleware()) // <--- Включаем проверку токена
 		{
-			pets.GET("/owner/:ownerId", petHandler.GetByOwner)
-			pets.POST("", petHandler.AddPet)
-			pets.PUT("/:petId", petHandler.UpdatePet)
-			pets.DELETE("/:petId", petHandler.DeletePet)
+			// Метод logout теперь тут, так как разлогиниться может только тот, кто вошел
+			protected.POST("/auth/logout", authHandler.Logout)
+
+			// PetController
+			pets := protected.Group("/pets")
+			{
+				pets.GET("/owner/:ownerId", petHandler.GetByOwner)
+				pets.POST("", petHandler.AddPet)
+				pets.PUT("/:petId", petHandler.UpdatePet)
+				pets.DELETE("/:petId", petHandler.DeletePet)
+			}
+
+			// VisitController
+			visits := protected.Group("/visits")
+			{
+				// Можно добавить проверку RoleMiddleware("doctor", "admin") для POST,
+				// так как клиент не должен сам себе писать медкарту
+				visits.POST("", visitHandler.SaveVisitCard)
+				visits.GET("/pet/:petId", visitHandler.GetJournal)
+				visits.GET("/:id", visitHandler.GetById)
+			}
+
+			// AppointmentController
+			apps := protected.Group("/appointments")
+			{
+				apps.POST("", appHandler.Create)
+				apps.GET("/owner/:ownerId", appHandler.GetByOwner)
+				apps.PUT("/:id/status", appHandler.UpdateStatus)
+				apps.DELETE("/:id", appHandler.Cancel)
+			}
+
+			// DoctorController
+			docs := protected.Group("/doctors")
+			{
+				docs.GET("", doctorHandler.GetBySpecialty)
+				docs.GET("/:id/schedule", doctorHandler.GetSchedule)
+			}
+
+			// WeightController
+			weight := protected.Group("/weight")
+			{
+				weight.GET("/pet/:petId", weightHandler.GetHistory)
+				weight.POST("/pet/:petId", weightHandler.AddRecord)
+			}
+
+			// Dashboard (Обзор)
+			protected.GET("/dashboard/:ownerId", dashHandler.GetData)
+
+			// --- ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ ---
+			admin := protected.Group("/admin")
+			admin.Use(middleware.RoleMiddleware("admin")) // <--- Доп. проверка роли
+			{
+				admin.GET("/stats", adminHandler.GetStats)
+				admin.GET("/revenue", adminHandler.GetRevenue)
+				admin.DELETE("/services/:id", adminHandler.DeleteService)
+				admin.POST("/meds", adminHandler.CreateMed)
+			}
 		}
 
-		// VisitController
-		visits := api.Group("/visits")
-		{
-			visits.POST("", visitHandler.SaveVisitCard)
-			visits.GET("/pet/:petId", visitHandler.GetJournal)
-			visits.GET("/:id", visitHandler.GetById)
-		}
-
-		// AppointmentController
-		apps := api.Group("/appointments")
-		{
-			apps.POST("", appHandler.Create)
-			apps.GET("/owner/:ownerId", appHandler.GetByOwner)
-			apps.PUT("/:id/status", appHandler.UpdateStatus)
-			apps.DELETE("/:id", appHandler.Cancel)
-		}
-
-		// DoctorController
-		docs := api.Group("/doctors")
-		{
-			docs.GET("", doctorHandler.GetBySpecialty)
-			docs.GET("/:id/schedule", doctorHandler.GetSchedule)
-		}
-
-		// AdminController
-		admin := api.Group("/admin")
-		{
-			admin.GET("/stats", adminHandler.GetStats)
-			admin.GET("/revenue", adminHandler.GetRevenue)
-			admin.DELETE("/services/:id", adminHandler.DeleteService)
-			admin.POST("/meds", adminHandler.CreateMed)
-		}
-
-		// WeightController
-		weight := api.Group("/weight")
-		{
-			weight.GET("/pet/:petId", weightHandler.GetHistory)
-			weight.POST("/pet/:petId", weightHandler.AddRecord)
-		}
-
-		// Dashboard (Обзор)
-		api.GET("/dashboard/:ownerId", dashHandler.GetData)
+		// Swagger остается доступным всем для удобства разработки
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 

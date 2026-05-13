@@ -17,49 +17,41 @@ type AuthService interface {
 }
 
 type authService struct {
-	ownerRepo  repository.OwnerRepository
 	doctorRepo repository.DoctorRepository
+	userRepo   repository.UserRepository
 }
 
-func NewAuthService(or repository.OwnerRepository, dr repository.DoctorRepository) AuthService {
-	return &authService{ownerRepo: or, doctorRepo: dr}
+func NewAuthService(or repository.UserRepository, dr repository.DoctorRepository) AuthService {
+	return &authService{userRepo: or, doctorRepo: dr}
 }
 
 func (s *authService) Login(req dto.LoginRequest) (*dto.AuthResponse, error) {
-	// 1. Ищем пользователя в базе по Email
-	user, err := s.ownerRepo.GetByEmail(req.Email)
+	// 1. Ищем в userRepository (бывший userRepo)
+	user, err := s.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		return nil, errors.New("неверный email или пароль")
 	}
 
-	// 2. Проверяем пароль
-	// Внимание: для реальных проектов пароли сравнивают через bcrypt.CompareHashAndPassword
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
-	if err != nil {
-		// Если пароли не совпали, вернется ошибка
+	// 2. Проверка пароля (bcrypt)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		return nil, errors.New("неверный email или пароль")
 	}
 
-	tokenString, err := s.generateToken(user.OwnerID, string(user.Role))
-	if err != nil {
-		return nil, errors.New("ошибка создания токена")
-	}
+	// 3. Генерируем токен (используем ID из таблицы User)
+	tokenString, err := s.generateToken(user.UserID, string(user.Role))
 
-	// 5. ФОРМИРОВАНИЕ ОТВЕТА
 	response := &dto.AuthResponse{
-		Token:    tokenString, // Теперь здесь реальная строка "eyJhbG..."
+		Token:    tokenString,
 		Role:     user.Role,
 		UserName: user.FirstName,
-		UserID:   user.OwnerID, // По умолчанию ID владельца
+		UserID:   user.UserID, // По умолчанию это ID клиента
 	}
 
-	// 6. СПЕЦИФИЧНАЯ ЛОГИКА ДЛЯ ВРАЧЕЙ
-	// Если вошел врач, нам нужно вернуть в фронтенд его DoctorID,
-	// чтобы фронт мог запрашивать расписание именно этого врача.
+	// 4. Если это врач, подменяем UserID на DoctorID для удобства фронтенда
 	if user.Role == models.RoleDoctor {
-		doctor, err := s.doctorRepo.GetByUserID(user.OwnerID)
+		doctor, err := s.doctorRepo.GetByUserID(user.UserID)
 		if err == nil {
-			response.UserID = doctor.DoctorID
+			response.UserID = doctor.DoctorID // Теперь фронт получит ID врача для расписания
 		}
 	}
 
@@ -67,29 +59,52 @@ func (s *authService) Login(req dto.LoginRequest) (*dto.AuthResponse, error) {
 }
 
 func (s *authService) Register(req dto.RegisterRequest) (*dto.AuthResponse, error) {
-	// По умолчанию регистрация через общую форму создает КЛИЕНТА (Owner)
-	// Докторов обычно создает Админ в своей панели
+	// 1. Проверяем, не занят ли Email
+	// Используем := так как это первое объявление err
+	_, err := s.userRepo.GetByEmail(req.Email)
+	if err == nil {
+		return nil, errors.New("пользователь с таким email уже зарегистрирован")
+	}
+
+	// 2. Проверяем, не занят ли Телефон
+	// Используем просто = так как переменная err уже существует выше
+	_, err = s.userRepo.GetByPhone(req.Phone)
+	if err == nil {
+		return nil, errors.New("этот номер телефона уже используется")
+	}
+
+	// 3. Хэшируем пароль
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
 	if err != nil {
 		return nil, errors.New("ошибка при обработке пароля")
 	}
-	newOwner := &models.Owner{
+
+	// 4. Создаем модель
+	newOwner := &models.User{
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
 		Email:        req.Email,
 		Phone:        req.Phone,
-		PasswordHash: string(hashedPassword), // Сохраняем хэш-строку
+		PasswordHash: string(hashedPassword),
+		Role:         models.RoleClient, // Обязательно задаем роль в модель!
 	}
 
-	if err := s.ownerRepo.Create(newOwner); err != nil {
+	// 5. Сохраняем в базу
+	if err := s.userRepo.Create(newOwner); err != nil {
 		return nil, err
 	}
-	tokenString, _ := s.generateToken(newOwner.OwnerID, "client")
+
+	// 6. Генерируем токен для нового пользователя
+	tokenString, err := s.generateToken(newOwner.UserID, string(newOwner.Role))
+	if err != nil {
+		return nil, errors.New("ошибка генерации токена")
+	}
+
 	return &dto.AuthResponse{
 		Token:    tokenString,
-		Role:     models.RoleClient,
+		Role:     newOwner.Role,
 		UserName: newOwner.FirstName,
-		UserID:   newOwner.OwnerID,
+		UserID:   newOwner.UserID,
 	}, nil
 }
 

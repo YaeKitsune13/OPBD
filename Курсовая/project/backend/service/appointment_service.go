@@ -17,20 +17,20 @@ type AppointmentService interface {
 type appointmentService struct {
 	appointmentRepo repository.AppointmentRepository
 	petRepo         repository.PetRepository
-	ownerRepo       repository.OwnerRepository
+	userRepo        repository.UserRepository
 	doctorRepo      repository.DoctorRepository
 }
 
 func NewAppointmentService(
 	ar repository.AppointmentRepository,
 	pr repository.PetRepository,
-	or repository.OwnerRepository,
+	or repository.UserRepository,
 	dr repository.DoctorRepository,
 ) AppointmentService {
 	return &appointmentService{
 		appointmentRepo: ar,
 		petRepo:         pr,
-		ownerRepo:       or,
+		userRepo:        or,
 		doctorRepo:      dr,
 	}
 }
@@ -48,7 +48,7 @@ func (s *appointmentService) GetDoctorTodaySchedule(doctorId int64) ([]dto.Today
 		if err != nil {
 			continue
 		}
-		owner, err := s.ownerRepo.GetByID(pet.OwnerID)
+		owner, err := s.userRepo.GetByID(pet.OwnerID)
 		if err != nil {
 			continue
 		}
@@ -81,14 +81,32 @@ func (s *appointmentService) GetUpcomingByOwner(ownerId int64) ([]dto.Appointmen
 
 	var result []dto.AppointmentRowDTO
 	for _, a := range apps {
-		pet, _ := s.petRepo.GetByID(a.PetID)
-		doctor, _ := s.doctorRepo.GetByID(a.DoctorID)
+		pet, errPet := s.petRepo.GetByID(a.PetID)
+		doctor, errDoc := s.doctorRepo.GetByID(a.DoctorID)
+
+		// Формируем PetLabel с проверкой на ошибку
+		petLabel := "Питомец удален"
+		if errPet == nil && pet != nil {
+			petLabel = fmt.Sprintf("%s %s", getEmojiAvatar(pet.Species), pet.Nickname)
+		}
+
+		// Формируем Имя врача и специальность
+		doctorName := "Врач не назначен"
+		specialty := "Общая"
+		if errDoc == nil && doctor != nil {
+			// ВАЖНО: берем данные из вложенного User (вашего Owner)
+			doctorName = fmt.Sprintf("%s %s.",
+				doctor.User.LastName,
+				string(doctor.User.FirstName[0]),
+			)
+			specialty = doctor.Speciality
+		}
 
 		result = append(result, dto.AppointmentRowDTO{
 			AppointmentId: a.AppointmentId,
-			PetLabel:      fmt.Sprintf("%s %s", getEmojiAvatar(pet.Species), pet.Nickname),
-			DoctorName:    fmt.Sprintf("%s %s.", doctor.LastName, string(doctor.FirstName[0])),
-			Specialty:     doctor.Speciality,
+			PetLabel:      petLabel,
+			DoctorName:    doctorName,
+			Specialty:     specialty,
 			ScheduledDate: a.ScheduledAt.Format("02.01.2006"),
 			ScheduledTime: a.ScheduledAt.Format("15:04"),
 			Status:        a.Status,

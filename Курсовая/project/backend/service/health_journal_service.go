@@ -34,14 +34,23 @@ func (s *healthJournalService) GetPetHistory(petId int64) ([]dto.HealthJournalDT
 	var history []dto.HealthJournalDTO
 
 	for _, v := range visits {
-		// 2. Получаем данные врача, чтобы узнать его ФИО
+		// 1. Получаем данные врача
 		doctor, err := s.doctorRepo.GetByID(v.Appointment.DoctorID)
 		doctorName := "Врач не указан"
-		if err == nil {
-			doctorName = fmt.Sprintf("%s %s.", doctor.LastName, string(doctor.FirstName[0]))
+
+		if err == nil && doctor != nil {
+			// Безопасно берем первую букву имени (работает с кириллицей)
+			firstNameRunes := []rune(doctor.User.FirstName)
+			initial := ""
+			if len(firstNameRunes) > 0 {
+				initial = string(firstNameRunes[0])
+			}
+
+			// ИСПРАВЛЕНИЕ: Обращаемся к doctor.User.LastName и initial
+			doctorName = fmt.Sprintf("%s %s.", doctor.User.LastName, initial)
 		}
 
-		// 3. Собираем DTO
+		// 2. Собираем DTO
 		item := dto.HealthJournalDTO{
 			VisitId:         v.VisitId,
 			Date:            v.Appointment.ScheduledAt.Format("02.01.2006"),

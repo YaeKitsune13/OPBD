@@ -61,7 +61,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	res, err := h.srv.Register(req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при регистрации"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

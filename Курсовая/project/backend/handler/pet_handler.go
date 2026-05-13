@@ -54,9 +54,9 @@ func (h *PetHandler) GetByOwner(c *gin.Context) {
 // @Router       /api/pets [post]
 func (h *PetHandler) AddPet(c *gin.Context) {
 	var input dto.PetCardDTO
-	// Десериализация JSON в структуру
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных"})
+		// Теперь эта ошибка вылетит только если JSON совсем "битый"
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Проверьте правильность заполнения полей"})
 		return
 	}
 
@@ -64,7 +64,8 @@ func (h *PetHandler) AddPet(c *gin.Context) {
 
 	err := h.srv.AddPet(ownerID, input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Возвращаем текст ошибки из сервиса (например, "дата рождения не может быть в будущем")
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -84,7 +85,7 @@ func (h *PetHandler) AddPet(c *gin.Context) {
 func (h *PetHandler) UpdatePet(c *gin.Context) {
 	var input dto.PetCardDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

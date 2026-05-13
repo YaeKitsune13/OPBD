@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive } from "vue";
-import { useToast } from '../../utils/useToast'
-const { showToast } = useToast()
+import { useToast } from "../../utils/useToast";
+const { showToast } = useToast();
 
 const props = defineProps({
     modelValue: Boolean,
@@ -83,7 +83,7 @@ async function doLogin() {
         const result = await response.json();
 
         if (result.error) {
-            alert(result.error);
+            showToast(result.error, "error");
             return;
         }
 
@@ -104,7 +104,7 @@ async function doLogin() {
             clearData();
         }
     } catch (e) {
-        showToast("Ошибка соединения с сервером","error");
+        showToast("Ошибка соединения с сервером", "error");
     }
 }
 
@@ -116,20 +116,26 @@ async function doRegister() {
         !regData.email ||
         !regData.pass
     ) {
-        showToast("Заполните все обязательные поля (Имя, Фамилия, Email, Пароль)","info");
+        showToast(
+            "Заполните все обязательные поля (Имя, Фамилия, Email, Пароль)",
+            "info",
+        );
         return;
     }
 
     // 2. Валидация пароля (>= 8 символов)
     if (regData.pass.length < 8) {
-        showToast("Безопасность: Пароль должен быть не менее 8 символов","info");
+        showToast(
+            "Безопасность: Пароль должен быть не менее 8 символов",
+            "info",
+        );
         return;
     }
 
     // 3. Валидация Email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(regData.email)) {
-        showToast("Введите корректный Email адрес","info");
+        showToast("Введите корректный Email адрес", "info");
         return;
     }
 
@@ -137,7 +143,10 @@ async function doRegister() {
     const phoneRegex =
         /^(\+7|7|8)?[\s\-]?\(?[489][0-9]{2}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$/;
     if (regData.phone && !phoneRegex.test(regData.phone)) {
-        showToast("Введите корректный номер телефона (например: +79001234567)","info");
+        showToast(
+            "Введите корректный номер телефона (например: +79001234567)",
+            "info",
+        );
         return;
     }
 
@@ -164,11 +173,11 @@ async function doRegister() {
             return;
         }
 
-        showToast("Регистрация успешна! Теперь вы можете войти.","success");
+        showToast("Регистрация успешна! Теперь вы можете войти.", "success");
         activeTab.value = "login";
         clearData();
     } catch (e) {
-        showToast("Ошибка при регистрации","error");
+        showToast("Ошибка при регистрации", "error");
     }
 }
 
