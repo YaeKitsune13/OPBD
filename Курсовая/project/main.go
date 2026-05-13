@@ -55,7 +55,7 @@ func main() {
 	log.Println("База подключена и миграция выполнена успешно!")
 
 	// 2. Инициализация Репозиториев (Слой DB)
-	ownerRepo := repository.NewOwnerRepository(db)
+	userRepo := repository.NewUserRepository(db)
 	petRepo := repository.NewPetRepository(db)
 	doctorRepo := repository.NewDoctorRepository(db)
 	appRepo := repository.NewAppointmentRepository(db)
@@ -63,14 +63,15 @@ func main() {
 	invRepo := repository.NewInventoryRepository(db)
 
 	// 3. Инициализация Сервисов (Слой логики)
-	authSrv := service.NewAuthService(ownerRepo, doctorRepo)
-	petSrv := service.NewPetService(petRepo, ownerRepo)
-	appSrv := service.NewAppointmentService(appRepo, petRepo, ownerRepo, doctorRepo)
+	authSrv := service.NewAuthService(userRepo, doctorRepo)
+	petSrv := service.NewPetService(petRepo, userRepo)
+	appSrv := service.NewAppointmentService(appRepo, petRepo, userRepo, doctorRepo)
 	healthSrv := service.NewHealthJournalService(visitRepo, doctorRepo)
 	doctorSrv := service.NewDoctorService(doctorRepo)
 	anaSrv := service.NewAnalyticsService(visitRepo, doctorRepo, invRepo)
 	invSrv := service.NewInventoryService(invRepo)
-	dashSrv := service.NewDashboardService(ownerRepo, petRepo, appRepo, visitRepo)
+	dashSrv := service.NewDashboardService(userRepo, petRepo, appRepo, visitRepo)
+	userSrv := service.NewUsersService(userRepo)
 
 	// 4. Инициализация Хендлеров (Слой API)
 	authHandler := handler.NewAuthHandler(authSrv)
@@ -78,7 +79,7 @@ func main() {
 	visitHandler := handler.NewVisitHandler(healthSrv)
 	appHandler := handler.NewAppointmentHandler(appSrv)
 	doctorHandler := handler.NewDoctorHandler(doctorSrv, appSrv)
-	adminHandler := handler.NewAdminHandler(anaSrv, invSrv)
+	adminHandler := handler.NewAdminHandler(anaSrv, invSrv, userSrv, doctorSrv)
 	weightHandler := handler.NewWeightHandler(petSrv)
 	dashHandler := handler.NewDashboardHandler(dashSrv)
 
@@ -161,10 +162,16 @@ func main() {
 
 			// --- ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ ---
 			admin := protected.Group("/admin")
-			admin.Use(middleware.RoleMiddleware("admin")) // <--- Доп. проверка роли
+			admin.Use(middleware.RoleMiddleware("admin"))
 			{
 				admin.GET("/stats", adminHandler.GetStats)
 				admin.GET("/revenue", adminHandler.GetRevenue)
+				admin.GET("/users", adminHandler.GetAllUsers)
+
+				admin.PUT("/users/:id/role", adminHandler.UpdateUserRole)
+
+				admin.POST("/doctors", adminHandler.CreateDoctor)
+
 				admin.DELETE("/services/:id", adminHandler.DeleteService)
 				admin.POST("/meds", adminHandler.CreateMed)
 			}

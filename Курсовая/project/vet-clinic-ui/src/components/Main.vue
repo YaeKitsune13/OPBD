@@ -83,6 +83,7 @@ const AnalyticsPage = defineAsyncComponent(() => import('./pages/admin/Analytics
 const RevenuePage = defineAsyncComponent(() => import('./pages/admin/RevenuePage.vue'))
 const ServicesPage = defineAsyncComponent(() => import('./pages/admin/ServicesPage.vue'))
 const MedsPage = defineAsyncComponent(() => import('./pages/admin/MedsPage.vue'))
+const ClientsPage = defineAsyncComponent(() => import('./pages/admin/ClientsPage.vue'))
 
 // Метод смены роли (для тестов или админа)
 function updateRole(newRole) {
@@ -141,6 +142,7 @@ function triggerPrint(data) {
         <RevenuePage v-if="currentPage === 'revenue'" />
         <ServicesPage v-if="currentPage === 'services'" />
         <MedsPage v-if="currentPage === 'meds'" />
+        <ClientsPage v-if="currentPage === 'clients'"/>
       </div>
     </main>
   </div>

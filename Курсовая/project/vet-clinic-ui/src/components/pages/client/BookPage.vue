@@ -35,27 +35,33 @@ async function fetchData() {
     if (petsRes.ok) pets.value = await petsRes.json();
 
     // 2. Загружаем врачей
-    // Предполагаем, что есть эндпоинт /api/doctors
     const docsRes = await fetch(`/api/doctors`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
-    if (docsRes.ok) doctors.value = await docsRes.json();
+    
+    if (docsRes.ok) {
+      const data = await docsRes.json(); // Сначала получаем данные в переменную
+      console.log("Врачи с сервера:", data); // Теперь console.log сработает
+      doctors.value = data; 
+    }
 
   } catch (e) {
+    console.error(e);
     showToast("Ошибка при загрузке данных", "error");
   }
 }
 
-// Фильтруем врачей по выбранной специализации
 const filteredDoctors = computed(() => {
   if (!appointmentForm.specialization) return [];
-  return doctors.value.filter(d => d.specialization === appointmentForm.specialization);
+  // В Go поле называется speciality
+  return doctors.value.filter(d => d.speciality === appointmentForm.specialization);
 });
 
 // Список уникальных специализаций для селекта
 const specializations = computed(() => {
-  const specs = doctors.value.map(d => d.specialization);
-  return [...new Set(specs)]; // Удаляем дубликаты
+  // В Go поле называется speciality
+  const specs = doctors.value.map(d => d.speciality);
+  return [...new Set(specs)].filter(Boolean); // filter(Boolean) уберет пустые значения
 });
 
 // --- ОТПРАВКА ЗАЯВКИ ---
@@ -144,8 +150,10 @@ onMounted(fetchData);
             <label>Врач *</label>
             <select v-model="appointmentForm.doctorId" :disabled="!appointmentForm.specialization">
               <option value="">— Выберите врача —</option>
-              <option v-for="doc in filteredDoctors" :key="doc.id" :value="doc.id">
-                {{ doc.name }}
+              <!-- 1. Используем doc.doctor_id вместо doc.id -->
+              <!-- 2. Используем данные из вложенного объекта user для имени -->
+              <option v-for="doc in filteredDoctors" :key="doc.doctor_id" :value="doc.doctor_id">
+                {{ doc.user.last_name }} {{ doc.user.first_name }}
               </option>
             </select>
           </div>

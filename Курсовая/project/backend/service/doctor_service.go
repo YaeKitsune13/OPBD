@@ -8,6 +8,7 @@ import (
 type DoctorService interface {
 	GetBySpecialty(specialty string) ([]models.Doctor, error)
 	GetAll() ([]models.Doctor, error)
+	CreateDoctor(doctor *models.Doctor) error
 }
 
 type doctorService struct {
@@ -24,4 +25,8 @@ func (s *doctorService) GetBySpecialty(specialty string) ([]models.Doctor, error
 
 func (s *doctorService) GetAll() ([]models.Doctor, error) {
 	return s.repo.GetAll()
+}
+
+func (s *doctorService) CreateDoctor(doctor *models.Doctor) error {
+	return s.repo.Create(doctor)
 }

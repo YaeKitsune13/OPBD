@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import Auth from "./components/screens/Auth.vue";
 import Main from "./components/Main.vue";
-import ToastContainer from './components/ui/ToastContainer.vue'
+import ToastContainer from "./components/ui/ToastContainer.vue";
 
 // --- СОСТОЯНИЕ ---
 const isAuthenticated = ref(false);
@@ -86,10 +86,6 @@ function handleLogout() {
 /* Сюда стоит перенести глобальные переменные :root из твоего HTML,
    чтобы они были доступны во всех компонентах */
 :root {
-    --bg: #0e0f11;
-    --surface: #16181c;
-    --accent: #4ade80;
-    /* ... все остальные переменные ... */
     --topbar-h: 52px;
     --sidebar-w: 220px;
 }

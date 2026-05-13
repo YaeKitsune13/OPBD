@@ -149,6 +149,81 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/admin/users": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Получение всех пользователей из бд",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/users/{id}/{role}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Получение пользователя по id и роли",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Роль пользователя",
+                        "name": "role",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/appointments": {
             "post": {
                 "consumes": [
@@ -971,7 +1046,11 @@ const docTemplate = `{
             "properties": {
                 "role": {
                     "description": "\"admin\", \"doctor\", \"client\"",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.UserRole"
+                        }
+                    ]
                 },
                 "token": {
                     "type": "string"
@@ -1091,8 +1170,7 @@ const docTemplate = `{
         "dto.PetCardDTO": {
             "type": "object",
             "required": [
-                "name",
-                "petId"
+                "name"
             ],
             "properties": {
                 "avatar": {
@@ -1216,26 +1294,15 @@ const docTemplate = `{
                 "doctor_id": {
                     "type": "integer"
                 },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "middle_name": {
-                    "type": "string"
-                },
-                "password_hash": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
                 "speciality": {
                     "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "description": "Ссылка на UserID",
+                    "type": "integer"
                 }
             }
         },
@@ -1287,6 +1354,48 @@ const docTemplate = `{
                 "StatusWaiting",
                 "StatusConfirmed",
                 "StatusRejected"
+            ]
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "middle_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/models.UserRole"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UserRole": {
+            "type": "string",
+            "enum": [
+                "client",
+                "admin",
+                "doctor"
+            ],
+            "x-enum-varnames": [
+                "RoleClient",
+                "RoleAdmin",
+                "RoleDoctor"
             ]
         }
     }

@@ -19,6 +19,26 @@ type doctorRepository struct {
 	db *gorm.DB
 }
 
+func (r *doctorRepository) GetByID(id int64) (*models.Doctor, error) {
+	var doctor models.Doctor
+	// Обязательно подгружаем данные пользователя (имя, фамилию)
+	err := r.db.Preload("User").First(&doctor, id).Error
+	return &doctor, err
+}
+
+func (r *doctorRepository) GetByUserID(user_id int64) (*models.Doctor, error) {
+	var doctor models.Doctor
+	// ИСПРАВЛЕНО: поле в базе теперь user_id
+	err := r.db.Preload("User").Where("user_id = ?", user_id).First(&doctor).Error
+	return &doctor, err
+}
+
+func (r *doctorRepository) GetAll() ([]models.Doctor, error) {
+	var doctors []models.Doctor
+	err := r.db.Preload("User").Find(&doctors).Error
+	return doctors, err
+}
+
 func NewDoctorRepository(db *gorm.DB) DoctorRepository {
 	return &doctorRepository{db: db}
 }
@@ -27,29 +47,12 @@ func (r *doctorRepository) Create(doctor *models.Doctor) error {
 	return r.db.Create(doctor).Error
 }
 
-func (r *doctorRepository) GetByID(id int64) (*models.Doctor, error) {
-	var doctor models.Doctor
-	err := r.db.First(&doctor, id).Error
-	return &doctor, err
-}
-
 func (r *doctorRepository) GetByEmail(email string) (*models.Doctor, error) {
 	var doctor models.Doctor
 	err := r.db.Where("email = ?", email).First(&doctor).Error
 	return &doctor, err
 }
 
-func (r *doctorRepository) GetByUserID(user_id int64) (*models.Doctor, error) {
-	var doctor models.Doctor
-	err := r.db.Where("owner_id = ?", user_id).First(&doctor).Error
-	return &doctor, err
-}
-
-func (r *doctorRepository) GetAll() ([]models.Doctor, error) {
-	var doctors []models.Doctor
-	err := r.db.Find(&doctors).Error
-	return doctors, err
-}
 func (r *doctorRepository) GetBySpecialty(specialty string) ([]models.Doctor, error) {
 	var doctors []models.Doctor
 	err := r.db.Where("speciality = ?", specialty).Find(&doctors).Error

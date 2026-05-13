@@ -113,6 +113,13 @@ function goTo(pageId) {
         >
           <span class="nav-icon">💰</span> Выручка
         </div>
+        <div
+          class="nav-item"
+          :class="{ active: activePage === 'clients' }"
+          @click="goTo('clients')"
+        >
+          <span class="nav-icon">👤</span> Пользователи
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Справочники</div>
@@ -123,7 +130,6 @@ function goTo(pageId) {
         >
           <span class="nav-icon">🔧</span> Услуги
         </div>
-        <!-- ДОБАВЛЕННЫЙ ПУНКТ -->
         <div class="nav-item" :class="{ active: activePage === 'meds' }" @click="goTo('meds')">
           <span class="nav-icon">💊</span> Медикаменты
         </div>
