@@ -41,10 +41,13 @@ func (s *authService) Login(req dto.LoginRequest) (*dto.AuthResponse, error) {
 	tokenString, err := s.generateToken(user.UserID, string(user.Role))
 
 	response := &dto.AuthResponse{
-		Token:    tokenString,
-		Role:     user.Role,
-		UserName: user.FirstName,
-		UserID:   user.UserID, // По умолчанию это ID клиента
+		Token:      tokenString,
+		Role:       user.Role,
+		UserName:   user.FirstName,
+		UserID:     user.UserID, // По умолчанию это ID клиента
+		LastName:   user.LastName,
+		Phone:      user.Phone,
+		MiddleName: user.MiddleName,
 	}
 
 	// 4. Если это врач, подменяем UserID на DoctorID для удобства фронтенда

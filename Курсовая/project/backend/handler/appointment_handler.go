@@ -116,3 +116,25 @@ func (h *AppointmentHandler) Cancel(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Запись отменена"})
 }
+
+func (h *AppointmentHandler) GetBusySlots(c *gin.Context) {
+	doctorID, err := strconv.ParseInt(c.Query("doctor_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid doctor_id"})
+		return
+	}
+
+	dateStr := c.Query("date") // Ожидаем "2026-05-13"
+	if dateStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "date is required"})
+		return
+	}
+
+	slots, err := h.srv.GetOccupiedTimeSlots(doctorID, dateStr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, slots) // Вернет ["09:00", "11:30"]
+}

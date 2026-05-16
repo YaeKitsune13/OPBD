@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UpdateRoleInput struct {
@@ -18,11 +19,21 @@ type CreateDoctorInput struct {
 	Speciality string `json:"speciality"`
 }
 
+type RegisterDoctorInput struct {
+	FirstName  string `json:"first_name" binding:"required"`
+	LastName   string `json:"last_name" binding:"required"`
+	MiddleName string `json:"middle_name"`
+	Email      string `json:"email" binding:"required,email"`
+	Phone      string `json:"phone"`
+	Password   string `json:"password" binding:"required"`
+	Speciality string `json:"speciality" binding:"required"`
+}
+
 type AdminHandler struct {
 	analyticsSrv service.AnalyticsService
 	inventorySrv service.InventoryService
 	usersServ    service.UsersService
-	doctorSrv    service.DoctorService // <-- Добавь это
+	doctorSrv    service.DoctorService
 }
 
 func NewAdminHandler(as service.AnalyticsService, is service.InventoryService, us service.UsersService, ds service.DoctorService) *AdminHandler {
@@ -30,8 +41,85 @@ func NewAdminHandler(as service.AnalyticsService, is service.InventoryService, u
 		analyticsSrv: as,
 		inventorySrv: is,
 		usersServ:    us,
-		doctorSrv:    ds, // Теперь у админа есть доступ к сервису врачей
+		doctorSrv:    ds,
 	}
+}
+
+// DeleteUser godoc
+// @Summary      Удалить пользователя
+// @Tags         admin
+// @Param        id path int true "ID пользователя"
+// @Success      200 {object} map[string]string
+// @Router       /api/admin/users/{id} [delete]
+func (h *AdminHandler) DeleteUser(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID"})
+		return
+	}
+
+	if err := h.usersServ.DeleteUser(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить пользователя"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Пользователь успешно удален"})
+}
+
+// RegisterDoctorFull godoc
+// @Summary      Создать нового врача (аккаунт + профиль)
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        body body RegisterDoctorInput true "Данные нового врача"
+// @Router       /api/admin/doctors/create-full [post]
+func (h *AdminHandler) RegisterDoctorFull(c *gin.Context) {
+	var input RegisterDoctorInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Заполните все обязательные поля"})
+		return
+	}
+
+	// 1. Хешируем пароль
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обработке пароля"})
+		return
+	}
+
+	// 2. Подготавливаем модель пользователя
+	newUser := &models.User{
+		FirstName:    input.FirstName,
+		LastName:     input.LastName,
+		MiddleName:   input.MiddleName,
+		Email:        input.Email,
+		Phone:        input.Phone,
+		PasswordHash: string(hashedPassword),
+		Role:         models.RoleDoctor, // Убедитесь, что константа RoleDoctor определена в моделях
+	}
+
+	// 3. Сохраняем пользователя в БД через сервис
+	if err := h.usersServ.CreateUser(newUser); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании аккаунта (возможно, email уже занят)"})
+		return
+	}
+
+	// 4. Создаем запись в таблице врачей, используя полученный UserID
+	newDoctor := &models.Doctor{
+		UserID:     newUser.UserID,
+		Speciality: input.Speciality,
+	}
+
+	if err := h.doctorSrv.CreateDoctor(newDoctor); err != nil {
+		// Опционально: здесь можно удалить созданного пользователя, если создание профиля врача провалилось (транзакция)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Аккаунт создан, но не удалось назначить специализацию"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Врач успешно зарегистрирован",
+		"user_id": newUser.UserID,
+	})
 }
 
 // GetStats godoc

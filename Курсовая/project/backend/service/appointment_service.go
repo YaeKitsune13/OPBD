@@ -5,6 +5,7 @@ import (
 	"example/project/backend/models"
 	"example/project/backend/repository"
 	"fmt"
+	"time"
 )
 
 type AppointmentService interface {
@@ -12,6 +13,7 @@ type AppointmentService interface {
 	CreateAppointment(app models.Appointment) error
 	GetUpcomingByOwner(ownerId int64) ([]dto.AppointmentRowDTO, error)
 	UpdateStatus(appId int64, status models.Status) error
+	GetOccupiedTimeSlots(doctorID int64, dateStr string) ([]string, error)
 }
 
 type appointmentService struct {
@@ -68,7 +70,17 @@ func (s *appointmentService) GetDoctorTodaySchedule(doctorId int64) ([]dto.Today
 
 // 2. Создание новой записи (Client)
 func (s *appointmentService) CreateAppointment(app models.Appointment) error {
-	app.Status = models.StatusWaiting // По умолчанию статус "Ожидание"
+	app.Status = models.StatusWaiting
+	isBusy, err := s.appointmentRepo.IsSlotTaken(app.DoctorID, app.ScheduledAt)
+	if err != nil {
+		return fmt.Errorf("ошибка при проверке доступности времени: %w", err)
+	}
+
+	if isBusy {
+		return fmt.Errorf("выбранное время (%s) уже занято этим врачом", app.ScheduledAt.Format("15:04"))
+	}
+
+	// 3. Если время свободно — создаем запись
 	return s.appointmentRepo.Create(&app)
 }
 
@@ -118,4 +130,34 @@ func (s *appointmentService) GetUpcomingByOwner(ownerId int64) ([]dto.Appointmen
 // 4. Обновление статуса (Confirm / Cancel)
 func (s *appointmentService) UpdateStatus(appId int64, status models.Status) error {
 	return s.appointmentRepo.UpdateStatus(appId, status)
+}
+
+func (s *appointmentService) GetOccupiedTimeSlots(doctorID int64, dateStr string) ([]string, error) {
+	// Парсим дату из строки "2026-05-13"
+	layout := "2006-01-02"
+	parsedDate, err := time.Parse(layout, dateStr)
+	if err != nil {
+		return nil, fmt.Errorf("неверный формат даты: %w", err)
+	}
+
+	// Определяем границы суток
+	start := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 0, 0, 0, 0, time.UTC)
+	end := start.Add(24 * time.Hour)
+
+	// Вызываем репозиторий (создадим этот метод ниже)
+	apps, err := s.appointmentRepo.GetByDoctorAndDateRange(doctorID, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	// Собираем только время занятых слотов
+	var occupied []string
+	for _, a := range apps {
+		// Добавляем в список только те, что не отменены/не отклонены
+		if a.Status != models.StatusRejected {
+			occupied = append(occupied, a.ScheduledAt.Format("15:04"))
+		}
+	}
+
+	return occupied, nil
 }

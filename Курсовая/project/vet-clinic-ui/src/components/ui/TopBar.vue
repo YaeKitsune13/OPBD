@@ -23,7 +23,7 @@ const emit = defineEmits(['update-role', 'toggle-sidebar', 'open-profile'])
     <div class="topbar-sep"></div>
 
     <!-- Блок пользователя -->
-    <div class="topbar-user" @click="emit('open-profile')">
+    <div class="topbar-user" @click="() => { emit('open-profile') }">
       <div class="avatar">{{ userAvatar }}</div>
       <span class="topbar-user-name">{{ userName }}</span>
     </div>

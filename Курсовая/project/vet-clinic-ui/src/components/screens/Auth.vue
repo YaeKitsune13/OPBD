@@ -90,14 +90,15 @@ async function doLogin() {
         if (result.token) {
             // 1. Сохраняем сессию
             localStorage.setItem("token", result.token);
-            localStorage.setItem(
-                "user",
-                JSON.stringify({
-                    id: result.userId,
-                    role: result.role,
-                    name: result.userName,
-                }),
-            );
+            localStorage.setItem("user", JSON.stringify({
+                id: result.userId,
+                role: result.role,
+                firstName: result.userName,
+                lastName: result.lastName,
+                email: loginData.email,      // ← уже есть в форме
+                phone: result.phone || '',   // ← если бэкенд возвращает
+                middleName: result.middleName || '',
+            }));
 
             // 2. Закрываем окно и уведомляем App.vue
             finalizeLogin(result.role);
@@ -200,18 +201,10 @@ function finalizeLogin(role: string) {
 
         <div class="auth-box">
             <div class="auth-tabs">
-                <div
-                    class="auth-tab"
-                    :class="{ active: activeTab === 'login' }"
-                    @click="activeTab = 'login'"
-                >
+                <div class="auth-tab" :class="{ active: activeTab === 'login' }" @click="activeTab = 'login'">
                     Вход
                 </div>
-                <div
-                    class="auth-tab"
-                    :class="{ active: activeTab === 'reg' }"
-                    @click="activeTab = 'reg'"
-                >
+                <div class="auth-tab" :class="{ active: activeTab === 'reg' }" @click="activeTab = 'reg'">
                     Регистрация
                 </div>
             </div>
@@ -220,27 +213,17 @@ function finalizeLogin(role: string) {
             <div v-if="activeTab === 'login'" class="auth-form">
                 <div class="form-group">
                     <label>Email</label>
-                    <input
-                        v-model="loginData.email"
-                        type="email"
-                        placeholder="example@mail.ru"
-                    />
+                    <input v-model="loginData.email" type="email" placeholder="example@mail.ru" />
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input
-                        v-model="loginData.pass"
-                        type="password"
-                        placeholder="Минимум 8 символов"
-                        @keyup.enter="doLogin"
-                    />
+                    <input v-model="loginData.pass" type="password" placeholder="Минимум 8 символов"
+                        @keyup.enter="doLogin" />
                 </div>
                 <button class="auth-submit" @click="doLogin">Войти</button>
                 <div class="auth-footer-text">
                     Нет аккаунта?
-                    <span class="auth-link" @click="activeTab = 'reg'"
-                        >Зарегистрироваться</span
-                    >
+                    <span class="auth-link" @click="activeTab = 'reg'">Зарегистрироваться</span>
                 </div>
             </div>
 
@@ -249,53 +232,31 @@ function finalizeLogin(role: string) {
                 <div class="form-row">
                     <div class="form-group">
                         <label>Фамилия</label>
-                        <input
-                            v-model="regData.lastName"
-                            type="text"
-                            placeholder="Иванов"
-                        />
+                        <input v-model="regData.lastName" type="text" placeholder="Иванов" />
                     </div>
                     <div class="form-group">
                         <label>Имя</label>
-                        <input
-                            v-model="regData.firstName"
-                            type="text"
-                            placeholder="Иван"
-                        />
+                        <input v-model="regData.firstName" type="text" placeholder="Иван" />
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Телефон</label>
-                    <input
-                        v-model="regData.phone"
-                        type="text"
-                        placeholder="+79001234567"
-                    />
+                    <input v-model="regData.phone" type="text" placeholder="+79001234567" />
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input
-                        v-model="regData.email"
-                        type="email"
-                        placeholder="example@mail.ru"
-                    />
+                    <input v-model="regData.email" type="email" placeholder="example@mail.ru" />
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input
-                        v-model="regData.pass"
-                        type="password"
-                        placeholder="Минимум 8 символов"
-                    />
+                    <input v-model="regData.pass" type="password" placeholder="Минимум 8 символов" />
                 </div>
                 <button class="auth-submit" @click="doRegister">
                     Зарегистрироваться
                 </button>
                 <div class="auth-footer-text">
                     Уже есть аккаунт?
-                    <span class="auth-link" @click="activeTab = 'login'"
-                        >Войти</span
-                    >
+                    <span class="auth-link" @click="activeTab = 'login'">Войти</span>
                 </div>
             </div>
         </div>
@@ -308,15 +269,18 @@ function finalizeLogin(role: string) {
     font-size: 12px;
     color: var(--text3);
 }
+
 .auth-link {
     color: var(--accent);
     cursor: pointer;
 }
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
+
 /* ── AUTH SCREEN ── */
 .auth-screen {
     position: fixed;
@@ -389,6 +353,7 @@ function finalizeLogin(role: string) {
     color: var(--accent);
     border-bottom-color: var(--accent);
 }
+
 .auth-tab:hover:not(.active) {
     color: var(--text);
 }

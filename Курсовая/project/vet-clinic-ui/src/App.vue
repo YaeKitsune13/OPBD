@@ -66,20 +66,12 @@ function handleLogout() {
 <template>
     <!-- Если НЕ авторизован — показываем экран входа -->
     <!-- v-model тут связывается с isVisible внутри Auth (если ты его оставил) -->
-    <Auth
-        v-if="!isAuthenticated"
-        :modelValue="true"
-        @login-success="handleLogin"
-    />
+    <Auth v-if="!isAuthenticated" :modelValue="true" @login-success="handleLogin" />
 
     <!-- Если авторизован — показываем основной интерфейс -->
-    <Main
-        v-else
-        :user-role="userRole"
-        :user-name="userName"
-        @logout="handleLogout"
-    />
+    <Main v-else :user-role="userRole" :user-name="userName" @logout="handleLogout" />
     <ToastContainer />
+    
 </template>
 
 <style>

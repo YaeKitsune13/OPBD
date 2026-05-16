@@ -18,30 +18,28 @@ const currentPage = ref('') // Инициализируем пустотой, н
 const mobileMenu = ref(false)
 const isProfileOpen = ref(false)
 
-// --- ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (Динамические) ---
 const currentUser = computed(() => {
-  // Названия ролей для отображения в профиле
   const roleLabels = {
     admin: 'Администратор',
     doctor: 'Врач',
     client: 'Клиент'
   }
 
-  // Генерация аватара из инициалов (Иван Иванов -> ИИ)
-  const getInitials = (name) => {
-    if (!name) return '??'
-    const parts = name.split(' ')
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
-    return name[0].toUpperCase()
+  const userRaw = localStorage.getItem('user')
+  const userData = userRaw ? JSON.parse(userRaw) : {}
+
+  const getInitials = () => {
+    const l = userData.lastName?.[0] || ''
+    const f = userData.firstName?.[0] || ''
+    return (l + f).toUpperCase() || '??'
   }
 
   return {
-    name: props.userName || 'Пользователь',
-    avatar: getInitials(props.userName),
+    name: `${userData.lastName || ''} ${userData.firstName || ''}`.trim() || 'Пользователь',
+    avatar: getInitials(),
     roleName: roleLabels[role.value] || 'Пользователь',
-    // Эти данные можно будет тоже прокинуть через props, если добавишь в БД
-    email: '---', 
-    phone: '---',
+    email: userData.email || '—',
+    phone: userData.phone || '—',
   }
 })
 
@@ -59,10 +57,10 @@ watch(() => props.userRole, (newRole) => {
 })
 
 function setInitialPage(currentRole) {
-  const firstPages = { 
-    client: 'dashboard', 
-    doctor: 'today', 
-    admin: 'analytics' 
+  const firstPages = {
+    client: 'dashboard',
+    doctor: 'today',
+    admin: 'analytics'
   }
   currentPage.value = firstPages[currentRole] || 'dashboard'
 }
@@ -97,37 +95,23 @@ function triggerPrint(data) {
   printData.value = data
   nextTick(() => { window.print() })
 }
+
 </script>
 
 <template>
-  <TopBar
-    :current-role="role"
-    :user-name="currentUser.name"
-    :user-avatar="currentUser.avatar"
-    @update-role="updateRole"
-    @toggle-sidebar="mobileMenu = !mobileMenu"
-    @open-profile="isProfileOpen = true"
-    @logout="emit('logout')"
-  />
+  <TopBar :current-role="role" :user-name="currentUser.name" :user-avatar="currentUser.avatar" @update-role="updateRole"
+    @toggle-sidebar="mobileMenu = !mobileMenu" @open-profile="isProfileOpen = true" @logout="emit('logout')" />
 
   <div class="layout">
-    <SideBar
-      :current-role="role"
-      :active-page="currentPage"
-      :is-open="mobileMenu"
-      @navigate="(page) => (currentPage = page)"
-      @close="mobileMenu = false"
-    />
+    <SideBar :current-role="role" :active-page="currentPage" :is-open="mobileMenu"
+      @navigate="(page) => (currentPage = page)" @close="mobileMenu = false" />
 
     <main class="main" id="main">
       <div class="page-container">
         <!-- Client -->
         <DashboardPage v-if="currentPage === 'dashboard'" @navigate="(p) => (currentPage = p)" />
         <PetsPage v-if="currentPage === 'pets'" />
-        <AppointmentsPage
-          v-if="currentPage === 'appointments'"
-          @navigate="(p) => (currentPage = p)"
-        />
+        <AppointmentsPage v-if="currentPage === 'appointments'" @navigate="(p) => (currentPage = p)" />
         <BookPage v-if="currentPage === 'book'" @navigate="(p) => (currentPage = p)" />
         <HistoryPage v-if="currentPage === 'history'" @print="triggerPrint" />
         <WeightPage v-if="currentPage === 'weight'" />
@@ -142,27 +126,22 @@ function triggerPrint(data) {
         <RevenuePage v-if="currentPage === 'revenue'" />
         <ServicesPage v-if="currentPage === 'services'" />
         <MedsPage v-if="currentPage === 'meds'" />
-        <ClientsPage v-if="currentPage === 'clients'"/>
+        <ClientsPage v-if="currentPage === 'clients'" />
       </div>
     </main>
   </div>
 
   <!-- Профиль -->
-  <ProfilePanel
-    :is-open="isProfileOpen"
-    :user="currentUser"
-    @close="isProfileOpen = false"
-    @logout="emit('logout')"
-  />
+
+  <Teleport to="body">
+    <ProfilePanel :is-open="isProfileOpen" :user="currentUser" @close="isProfileOpen = false"
+      @logout="emit('logout')" />
+  </Teleport>
+
 
   <!-- Печать -->
   <Teleport to="body">
-    <PrintZone
-      id="printRoot"
-      :pet="printData.pet"
-      :visits="printData.visits"
-      :type="printData.type"
-    />
+    <PrintZone id="printRoot" :pet="printData.pet" :visits="printData.visits" :type="printData.type" />
   </Teleport>
 </template>
 
@@ -172,18 +151,21 @@ function triggerPrint(data) {
   height: calc(100vh - var(--topbar-h));
   overflow: hidden;
 }
+
 .main {
   flex: 1;
   overflow-y: auto;
   background: var(--bg);
   scroll-behavior: smooth;
 }
+
 .page-container {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }
+
 @media (max-width: 768px) {
   .page-container {
     padding: 16px;

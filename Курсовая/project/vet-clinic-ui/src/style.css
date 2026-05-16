@@ -6,13 +6,9 @@
     --bg: #f4f5f7; /* Общий фон (светло-серый) */
     --surface: #ffffff; /* Карточки/блоки (белый для контраста) */
     --surface2: #f9fafb; /* Второстепенные элементы */
-    --surface3: #eff1f4; /* Элементы при наведении */
-
-    /* Границы: стали темнее, чтобы их было видно на светлом */
+    --surface3: #eff1f4; /* Элементы при наведении */ /* Границы: стали темнее, чтобы их было видно на светлом */
     --border: #e2e8f0;
-    --border2: #cbd5e1;
-
-    /* Текст: инвертирован в темный */
+    --border2: #cbd5e1; /* Текст: инвертирован в темный */
     --text: #1a1c21; /* Основной текст (почти черный) */
     --text2: #5e6672; /* Вторичный текст (серый) */
     --text3: #8e97a4; /* Приглушенный текст */
@@ -38,7 +34,7 @@
     --mono: "JetBrains Mono", monospace;
 }
 /* ── VARIABLES (Dark THEME) ── */
-:root {
+/*:root {
     --bg: #0e0f11;
     --surface: #16181c;
     --surface2: #1c1f25;
@@ -62,7 +58,7 @@
     --radius: 6px;
     --font: "Onest", sans-serif;
     --mono: "JetBrains Mono", monospace;
-}
+}*/
 
 /* ── BASE RESET ── */
 * {
@@ -85,13 +81,13 @@ body {
     display: flex;
     flex: 1;
     height: calc(100vh - var(--topbar-h));
-    overflow: hidden;
+    overflow: visible;
 }
 
 .main {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: visible;
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -375,6 +371,7 @@ textarea:focus {
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    margin-top: 10px;
     gap: 16px;
 }
 .mono {
@@ -417,7 +414,8 @@ textarea:focus {
 .schedule-list {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 20px;
+    padding: 12px 16px;
 }
 .schedule-item {
     display: flex;
@@ -427,6 +425,11 @@ textarea:focus {
     border-radius: var(--radius);
     cursor: pointer;
     transition: background 0.1s;
+    border-bottom: 1px solid var(--border); /* ← добавь */
+}
+
+.schedule-item:last-child {
+    border-bottom: none; /* последний без линии */
 }
 .schedule-item:hover {
     background: var(--surface2);

@@ -82,6 +82,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(anaSrv, invSrv, userSrv, doctorSrv)
 	weightHandler := handler.NewWeightHandler(petSrv)
 	dashHandler := handler.NewDashboardHandler(dashSrv)
+	userHandler := handler.NewUserHandler(userSrv)
 
 	// 5. Настройка Gin
 	r := gin.Default()
@@ -141,6 +142,7 @@ func main() {
 				apps.GET("/owner/:ownerId", appHandler.GetByOwner)
 				apps.PUT("/:id/status", appHandler.UpdateStatus)
 				apps.DELETE("/:id", appHandler.Cancel)
+				apps.GET("/busy-slots", appHandler.GetBusySlots)
 			}
 
 			// DoctorController
@@ -155,6 +157,12 @@ func main() {
 			{
 				weight.GET("/pet/:petId", weightHandler.GetHistory)
 				weight.POST("/pet/:petId", weightHandler.AddRecord)
+			}
+
+			users := protected.Group("/users")
+			{
+				users.PUT("/:id", userHandler.UpdateProfile)
+				users.PUT("/:id/password", userHandler.ChangePassword)
 			}
 
 			// Dashboard (Обзор)
@@ -174,6 +182,9 @@ func main() {
 
 				admin.DELETE("/services/:id", adminHandler.DeleteService)
 				admin.POST("/meds", adminHandler.CreateMed)
+
+				admin.DELETE("/users/:id", adminHandler.DeleteUser)
+				admin.POST("/doctors/create-full", adminHandler.RegisterDoctorFull)
 			}
 		}
 

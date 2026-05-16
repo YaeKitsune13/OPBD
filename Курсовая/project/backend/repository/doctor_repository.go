@@ -55,6 +55,6 @@ func (r *doctorRepository) GetByEmail(email string) (*models.Doctor, error) {
 
 func (r *doctorRepository) GetBySpecialty(specialty string) ([]models.Doctor, error) {
 	var doctors []models.Doctor
-	err := r.db.Where("speciality = ?", specialty).Find(&doctors).Error
+	err := r.db.Where("speciality = ?", specialty).Preload("User").Find(&doctors).Error
 	return doctors, err
 }
