@@ -18,7 +18,9 @@ type MyCustomClaims struct {
 func GetJWTSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		log.Fatal(".env not access jwt token")
+		log.Println("============================================")
+		log.Println(".env not access jwt token")
+		log.Println("============================================")
 		return []byte("fallback_secret_key_for_dev")
 	}
 	return []byte(secret)

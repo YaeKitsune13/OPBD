@@ -29,7 +29,6 @@ const filename = ".env"
 func main() {
 	file, err := os.Open(filename)
 	if err != nil {
-		// Здесь лучше просто вывести предупреждение, вдруг переменные заданы в системе напрямую
 		log.Println("Предупреждение: Файл .env не найден, используем системные переменные")
 	} else {
 		scanner := bufio.NewScanner(file)
@@ -180,8 +179,15 @@ func main() {
 
 				admin.POST("/doctors", adminHandler.CreateDoctor)
 
+				admin.GET("/services", adminHandler.GetAllServices)
 				admin.DELETE("/services/:id", adminHandler.DeleteService)
+				admin.POST("/services", adminHandler.CreateSrv)
+				admin.PUT("/services/:id", adminHandler.UpdateService)
+
+				admin.GET("/meds", adminHandler.GetMeds)
 				admin.POST("/meds", adminHandler.CreateMed)
+				admin.PUT("/meds/:id", adminHandler.UpdateMed)
+				admin.DELETE("/meds/:id", adminHandler.DeleteMed)
 
 				admin.DELETE("/users/:id", adminHandler.DeleteUser)
 				admin.POST("/doctors/create-full", adminHandler.RegisterDoctorFull)

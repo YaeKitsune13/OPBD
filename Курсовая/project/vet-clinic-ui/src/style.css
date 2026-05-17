@@ -34,7 +34,7 @@
     --mono: "JetBrains Mono", monospace;
 }
 /* ── VARIABLES (Dark THEME) ── */
-/*:root {
+:root {
     --bg: #0e0f11;
     --surface: #16181c;
     --surface2: #1c1f25;
@@ -58,7 +58,7 @@
     --radius: 6px;
     --font: "Onest", sans-serif;
     --mono: "JetBrains Mono", monospace;
-}*/
+}
 
 /* ── BASE RESET ── */
 * {

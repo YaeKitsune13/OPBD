@@ -2,6 +2,13 @@ basePath: /
 definitions:
   dto.AuthResponse:
     properties:
+      lastName:
+        description: ← добавь
+        type: string
+      middleName:
+        type: string
+      phone:
+        type: string
       role:
         allOf:
         - $ref: '#/definitions/models.UserRole'
@@ -61,6 +68,29 @@ definitions:
     - email
     - password
     type: object
+  dto.MedicationItemDTO:
+    properties:
+      desc:
+        type: string
+      expiry:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      status:
+        $ref: '#/definitions/dto.MedicationStatus'
+    type: object
+  dto.MedicationStatus:
+    enum:
+    - ok
+    - expired
+    type: string
+    x-enum-varnames:
+    - MedicationOk
+    - MedicationExpired
   dto.NextAppointmentData:
     properties:
       dateTime:
@@ -131,6 +161,17 @@ definitions:
       owner:
         type: string
     type: object
+  dto.ServiceItemDTO:
+    properties:
+      desc:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+    type: object
   dto.VisitAssignments:
     properties:
       id:
@@ -142,6 +183,41 @@ definitions:
       qty:
         type: integer
       type:
+        type: string
+    type: object
+  handler.CreateDoctorInput:
+    properties:
+      speciality:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  handler.RegisterDoctorInput:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      speciality:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - speciality
+    type: object
+  handler.UpdateRoleInput:
+    properties:
+      role:
         type: string
     type: object
   models.Appointment:
@@ -170,34 +246,8 @@ definitions:
       user:
         $ref: '#/definitions/models.User'
       user_id:
-        description: Ссылка на UserID
         type: integer
     type: object
-  models.Medication:
-    properties:
-      code:
-        type: string
-      description:
-        type: string
-      expiry_date:
-        type: string
-      medication_id:
-        type: integer
-      name:
-        type: string
-      price_per_unit:
-        type: number
-      status:
-        $ref: '#/definitions/models.MedicationStatus'
-    type: object
-  models.MedicationStatus:
-    enum:
-    - ok
-    - expired
-    type: string
-    x-enum-varnames:
-    - MedicationOK
-    - MedicationExpired
   models.Status:
     enum:
     - waiting
@@ -244,7 +294,66 @@ info:
   title: Ветеринарная клиника API
   version: "1.0"
 paths:
+  /api/admin/doctors:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные врача
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateDoctorInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать профиль врача
+      tags:
+      - admin
+  /api/admin/doctors/create-full:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные нового врача
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RegisterDoctorInput'
+      produces:
+      - application/json
+      responses: {}
+      summary: Создать нового врача (аккаунт + профиль)
+      tags:
+      - admin
   /api/admin/meds:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.MedicationItemDTO'
+            type: array
+      summary: Получить все медикаменты
+      tags:
+      - admin
     post:
       consumes:
       - application/json
@@ -254,7 +363,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/models.Medication'
+          $ref: '#/definitions/dto.MedicationItemDTO'
       produces:
       - application/json
       responses:
@@ -271,6 +380,51 @@ paths:
               type: string
             type: object
       summary: Добавить медикамент
+      tags:
+      - admin
+  /api/admin/meds/{id}:
+    delete:
+      parameters:
+      - description: ID медикамента
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить медикамент
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID медикамента
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Данные медикамента
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MedicationItemDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить медикамент
       tags:
       - admin
   /api/admin/revenue:
@@ -292,6 +446,54 @@ paths:
       summary: Отчёт по выручке
       tags:
       - admin
+  /api/admin/services:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ServiceItemDTO'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получение всех сервисов из бд
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные сервиса
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ServiceItemDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Добавить сервис
+      tags:
+      - admin
   /api/admin/services/{id}:
     delete:
       parameters:
@@ -310,6 +512,39 @@ paths:
               type: string
             type: object
       summary: Удалить услугу
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные услуги
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ServiceItemDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить услугу
       tags:
       - admin
   /api/admin/stats:
@@ -351,33 +586,56 @@ paths:
       summary: Получение всех пользователей из бд
       tags:
       - admin
-  /api/admin/users/{id}/{role}:
-    get:
+  /api/admin/users/{id}:
+    delete:
       parameters:
       - description: ID пользователя
         in: path
         name: id
         required: true
         type: integer
-      - description: Роль пользователя
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить пользователя
+      tags:
+      - admin
+  /api/admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
         in: path
-        name: role
+        name: id
         required: true
-        type: string
+        type: integer
+      - description: Новая роль
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateRoleInput'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.User'
-        "404":
-          description: Not Found
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Получение пользователя по id и роли
+      summary: Обновить роль пользователя
       tags:
       - admin
   /api/appointments:

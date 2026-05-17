@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"example/project/backend/dto"
 	"example/project/backend/models"
 	"example/project/backend/service"
 	"net/http"
@@ -80,14 +81,12 @@ func (h *AdminHandler) RegisterDoctorFull(c *gin.Context) {
 		return
 	}
 
-	// 1. Хешируем пароль
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обработке пароля"})
 		return
 	}
 
-	// 2. Подготавливаем модель пользователя
 	newUser := &models.User{
 		FirstName:    input.FirstName,
 		LastName:     input.LastName,
@@ -95,23 +94,20 @@ func (h *AdminHandler) RegisterDoctorFull(c *gin.Context) {
 		Email:        input.Email,
 		Phone:        input.Phone,
 		PasswordHash: string(hashedPassword),
-		Role:         models.RoleDoctor, // Убедитесь, что константа RoleDoctor определена в моделях
+		Role:         models.RoleDoctor,
 	}
 
-	// 3. Сохраняем пользователя в БД через сервис
 	if err := h.usersServ.CreateUser(newUser); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании аккаунта (возможно, email уже занят)"})
 		return
 	}
 
-	// 4. Создаем запись в таблице врачей, используя полученный UserID
 	newDoctor := &models.Doctor{
 		UserID:     newUser.UserID,
 		Speciality: input.Speciality,
 	}
 
 	if err := h.doctorSrv.CreateDoctor(newDoctor); err != nil {
-		// Опционально: здесь можно удалить созданного пользователя, если создание профиля врача провалилось (транзакция)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Аккаунт создан, но не удалось назначить специализацию"})
 		return
 	}
@@ -154,19 +150,36 @@ func (h *AdminHandler) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-// GetUserByRole godoc
-// @Summary      Получение пользователя по id и роли
+// GetAllServices godoc
+// @Summary      Получение всех сервисов из бд
 // @Tags         admin
 // @Produce      json
-// @Param        id   path int    true "ID пользователя"
-// @Param        role path string true "Роль пользователя"
-// @Success      200 {object} models.User
-// @Failure      404 {object} map[string]string
-// @Router       /api/admin/users/{id}/{role} [get]
+// @Success      200 {array}  dto.ServiceItemDTO
+// @Failure      500 {object} map[string]string
+// @Router       /api/admin/services [get]
+func (h *AdminHandler) GetAllServices(c *gin.Context) {
+	serv, err := h.inventorySrv.GetServices()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось получить список сервисов"})
+		return
+	}
+	c.JSON(http.StatusOK, serv)
+}
+
+// UpdateUserRole godoc
+// @Summary      Обновить роль пользователя
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        id   path int true "ID пользователя"
+// @Param        body body UpdateRoleInput true "Новая роль"
+// @Success      200 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Router       /api/admin/users/{id}/role [put]
 func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID"})
 		return
 	}
 
@@ -176,12 +189,41 @@ func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	err = h.usersServ.UpdateUserRole(id, models.UserRole(input.Role))
-	if err != nil {
+	if err := h.usersServ.UpdateUserRole(id, models.UserRole(input.Role)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Роль обновлена"})
+}
+
+// UpdateService godoc
+// @Summary      Обновить услугу
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        id   path int true "ID услуги"
+// @Param        body body dto.ServiceItemDTO true "Данные услуги"
+// @Success      200 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Router       /api/admin/services/{id} [put]
+func (h *AdminHandler) UpdateService(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID"})
+		return
+	}
+
+	var input dto.ServiceItemDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Данные не верны"})
+		return
+	}
+
+	if err := h.inventorySrv.UpdateServices(id, input); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return // ← не было return, 201 слался даже при ошибке
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Сервис обновлён"})
 }
 
 // GetRevenue godoc
@@ -208,9 +250,33 @@ func (h *AdminHandler) GetRevenue(c *gin.Context) {
 // @Success      200 {object} map[string]string
 // @Router       /api/admin/services/{id} [delete]
 func (h *AdminHandler) DeleteService(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	// Вызов метода из InventoryService (нужно будет туда добавить DeleteService)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID"})
+		return
+	}
+
+	if err := h.inventorySrv.DeleteService(id); err != nil { // ← была заглушка без реального вызова
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить услугу"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Услуга удалена", "id": id})
+}
+
+// GetMeds godoc
+// @Summary      Получить все медикаменты
+// @Tags         admin
+// @Produce      json
+// @Success      200 {array}  dto.MedicationItemDTO
+// @Router       /api/admin/meds [get]
+func (h *AdminHandler) GetMeds(c *gin.Context) {
+	meds, err := h.inventorySrv.GetMedications()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось получить медикаменты"})
+		return
+	}
+	c.JSON(http.StatusOK, meds)
 }
 
 // CreateMed godoc
@@ -218,20 +284,93 @@ func (h *AdminHandler) DeleteService(c *gin.Context) {
 // @Tags         admin
 // @Accept       json
 // @Produce      json
-// @Param        body body models.Medication true "Данные медикамента"
+// @Param        body body dto.MedicationItemDTO true "Данные медикамента"
 // @Success      201 {object} map[string]string
 // @Failure      400 {object} map[string]string
 // @Router       /api/admin/meds [post]
 func (h *AdminHandler) CreateMed(c *gin.Context) {
-	var input models.Medication
+	var input dto.MedicationItemDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Данные не верны"})
 		return
 	}
-	// Вызов метода из InventoryService
+	if err := h.inventorySrv.CreateMedication(input); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusCreated, gin.H{"message": "Медикамент добавлен"})
 }
 
+// UpdateMed godoc
+// @Summary      Обновить медикамент
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "ID медикамента"
+// @Param        body body dto.MedicationItemDTO true "Данные медикамента"
+// @Success      200 {object} map[string]string
+// @Router       /api/admin/meds/{id} [put]
+func (h *AdminHandler) UpdateMed(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.MedicationItemDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Данные не верны"})
+		return
+	}
+	if err := h.inventorySrv.UpdateMedication(id, input); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Медикамент обновлён"})
+}
+
+// DeleteMed godoc
+// @Summary      Удалить медикамент
+// @Tags         admin
+// @Param        id path string true "ID медикамента"
+// @Success      200 {object} map[string]string
+// @Router       /api/admin/meds/{id} [delete]
+func (h *AdminHandler) DeleteMed(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.inventorySrv.DeleteMedication(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить медикамент"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Медикамент удалён"})
+}
+
+// CreateSrv godoc
+// @Summary      Добавить сервис
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        body body dto.ServiceItemDTO true "Данные сервиса"
+// @Success      201 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Router       /api/admin/services [post]
+func (h *AdminHandler) CreateSrv(c *gin.Context) {
+	var input dto.ServiceItemDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Данные не верны"})
+		return
+	}
+
+	if err := h.inventorySrv.CreateService(input); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return // ← не было return, 201 слался даже при ошибке
+	}
+	c.JSON(http.StatusCreated, gin.H{"message": "Сервис добавлен"})
+}
+
+// CreateDoctor godoc
+// @Summary      Создать профиль врача
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        body body CreateDoctorInput true "Данные врача"
+// @Success      201 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Router       /api/admin/doctors [post]
 func (h *AdminHandler) CreateDoctor(c *gin.Context) {
 	var input CreateDoctorInput
 	if err := c.ShouldBindJSON(&input); err != nil {

@@ -12,11 +12,11 @@ type InventoryRepository interface {
 	GetMedicationByID(id int64) (models.Medication, error)
 
 	CreateService(s *models.Service) error
-	UpdateService(s *models.Service) error
+	UpdateService(id int64, s *models.Service) error
 	DeleteService(id int64) error
 
 	CreateMedication(m *models.Medication) error
-	UpdateMedication(m *models.Medication) error
+	UpdateMedication(id int64, m *models.Medication) error
 	DeleteMedication(id int64) error
 }
 
@@ -45,8 +45,21 @@ func (r *inventoryRepository) GetMedicationByID(id int64) (models.Medication, er
 	err := r.db.First(&medication, id).Error
 	return medication, err
 }
-func (r *inventoryRepository) CreateService(s *models.Service) error { return r.db.Create(s).Error }
-func (r *inventoryRepository) UpdateService(s *models.Service) error { return r.db.Save(s).Error }
+
+func (r *inventoryRepository) CreateService(s *models.Service) error {
+	return r.db.Create(s).Error
+}
+
+func (r *inventoryRepository) UpdateService(id int64, s *models.Service) error {
+	return r.db.Model(&models.Service{}).
+		Where("service_id = ?", id).
+		Updates(map[string]interface{}{
+			"name":        s.Name,
+			"description": s.Description,
+			"price":       s.Price,
+		}).Error
+}
+
 func (r *inventoryRepository) DeleteService(id int64) error {
 	return r.db.Delete(&models.Service{}, id).Error
 }
@@ -54,7 +67,18 @@ func (r *inventoryRepository) DeleteService(id int64) error {
 func (r *inventoryRepository) CreateMedication(m *models.Medication) error {
 	return r.db.Create(m).Error
 }
-func (r *inventoryRepository) UpdateMedication(m *models.Medication) error { return r.db.Save(m).Error }
+
+func (r *inventoryRepository) UpdateMedication(id int64, m *models.Medication) error {
+	return r.db.Model(&models.Medication{}).
+		Where("medication_id = ?", id).
+		Updates(map[string]interface{}{
+			"name":           m.Name,
+			"description":    m.Description,
+			"price_per_unit": m.PricePerUnit,
+			"expiry_date":    m.ExpiryDate,
+		}).Error
+}
+
 func (r *inventoryRepository) DeleteMedication(id int64) error {
 	return r.db.Delete(&models.Medication{}, id).Error
 }

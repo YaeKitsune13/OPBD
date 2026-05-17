@@ -15,7 +15,98 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/admin/doctors": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Создать профиль врача",
+                "parameters": [
+                    {
+                        "description": "Данные врача",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CreateDoctorInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/doctors/create-full": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Создать нового врача (аккаунт + профиль)",
+                "parameters": [
+                    {
+                        "description": "Данные нового врача",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.RegisterDoctorInput"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/api/admin/meds": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Получить все медикаменты",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.MedicationItemDTO"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -34,7 +125,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Medication"
+                            "$ref": "#/definitions/dto.MedicationItemDTO"
                         }
                     }
                 ],
@@ -50,6 +141,75 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/meds/{id}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Обновить медикамент",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID медикамента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные медикамента",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MedicationItemDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Удалить медикамент",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID медикамента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -89,7 +249,131 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/admin/services": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Получение всех сервисов из бд",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.ServiceItemDTO"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Добавить сервис",
+                "parameters": [
+                    {
+                        "description": "Данные сервиса",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ServiceItemDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/admin/services/{id}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Обновить услугу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID услуги",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные услуги",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ServiceItemDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "delete": {
                 "produces": [
                     "application/json"
@@ -180,15 +464,46 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/admin/users/{id}/{role}": {
-            "get": {
+        "/api/admin/users/{id}": {
+            "delete": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Удалить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/users/{id}/role": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "admin"
                 ],
-                "summary": "Получение пользователя по id и роли",
+                "summary": "Обновить роль пользователя",
                 "parameters": [
                     {
                         "type": "integer",
@@ -198,22 +513,27 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Роль пользователя",
-                        "name": "role",
-                        "in": "path",
-                        "required": true
+                        "description": "Новая роль",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateRoleInput"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1044,6 +1364,16 @@ const docTemplate = `{
         "dto.AuthResponse": {
             "type": "object",
             "properties": {
+                "lastName": {
+                    "description": "← добавь",
+                    "type": "string"
+                },
+                "middleName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
                 "role": {
                     "description": "\"admin\", \"doctor\", \"client\"",
                     "allOf": [
@@ -1135,6 +1465,40 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "dto.MedicationItemDTO": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "expiry": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "status": {
+                    "$ref": "#/definitions/dto.MedicationStatus"
+                }
+            }
+        },
+        "dto.MedicationStatus": {
+            "type": "string",
+            "enum": [
+                "ok",
+                "expired"
+            ],
+            "x-enum-varnames": [
+                "MedicationOk",
+                "MedicationExpired"
+            ]
         },
         "dto.NextAppointmentData": {
             "type": "object",
@@ -1242,6 +1606,23 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ServiceItemDTO": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.VisitAssignments": {
             "type": "object",
             "properties": {
@@ -1258,6 +1639,58 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.CreateDoctorInput": {
+            "type": "object",
+            "properties": {
+                "speciality": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.RegisterDoctorInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "first_name",
+                "last_name",
+                "password",
+                "speciality"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "middle_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "speciality": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UpdateRoleInput": {
+            "type": "object",
+            "properties": {
+                "role": {
                     "type": "string"
                 }
             }
@@ -1301,47 +1734,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/models.User"
                 },
                 "user_id": {
-                    "description": "Ссылка на UserID",
                     "type": "integer"
                 }
             }
-        },
-        "models.Medication": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "expiry_date": {
-                    "type": "string"
-                },
-                "medication_id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price_per_unit": {
-                    "type": "number"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.MedicationStatus"
-                }
-            }
-        },
-        "models.MedicationStatus": {
-            "type": "string",
-            "enum": [
-                "ok",
-                "expired"
-            ],
-            "x-enum-varnames": [
-                "MedicationOK",
-                "MedicationExpired"
-            ]
         },
         "models.Status": {
             "type": "string",
