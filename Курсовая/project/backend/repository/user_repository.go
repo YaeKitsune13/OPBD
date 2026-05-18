@@ -2,6 +2,7 @@ package repository
 
 import (
 	"example/project/backend/models"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -15,8 +16,8 @@ type UserRepository interface {
 	GetAllUsers() ([]models.User, error)
 	GetByIDAndRole(id int64, role models.UserRole) (*models.User, error)
 	UpdateRole(id int64, role models.UserRole) error
-	// Добавляем метод в интерфейс
 	Delete(id int64) error
+	SearchByName(query string) ([]models.User, error)
 }
 
 type userRepository struct {
@@ -27,10 +28,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-// Реализация удаления
 func (r *userRepository) Delete(id int64) error {
-	// Используем .Unscoped(), если нужно удалить запись физически из базы (даже если есть поле DeletedAt)
-	// Либо просто .Delete(), если используете Soft Delete от GORM
 	return r.db.Where("user_id = ?", id).Delete(&models.User{}).Error
 }
 
@@ -50,8 +48,6 @@ func (r *userRepository) Create(owner *models.User) error {
 
 func (r *userRepository) GetByID(id int64) (*models.User, error) {
 	var owner models.User
-	// Если первичный ключ в модели назван user_id, GORM поймет это через теги.
-	// Если нет, лучше использовать .Where("user_id = ?", id)
 	err := r.db.Where("user_id = ?", id).First(&owner).Error
 	return &owner, err
 }
@@ -79,4 +75,13 @@ func (r *userRepository) GetByPhone(phone string) (*models.User, error) {
 
 func (r *userRepository) Update(owner *models.User) error {
 	return r.db.Save(owner).Error
+}
+func (r *userRepository) SearchByName(query string) ([]models.User, error) {
+	var users []models.User
+	q := "%" + strings.ToLower(query) + "%"
+	err := r.db.Where(
+		"role = ? AND (LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ? OR LOWER(middle_name) LIKE ?)",
+		models.RoleClient, q, q, q,
+	).Find(&users).Error
+	return users, err
 }

@@ -1143,6 +1143,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/search": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "Поиск пациентов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Кличка питомца или ФИО владельца",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.PatientSearchResultDTO"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/visits": {
             "post": {
                 "consumes": [
@@ -1511,6 +1542,38 @@ const docTemplate = `{
                 },
                 "petName": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.PatientSearchResultDTO": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "breed": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "integer"
+                },
+                "owner_name": {
+                    "type": "string"
+                },
+                "owner_phone": {
+                    "type": "string"
+                },
+                "pet_id": {
+                    "type": "integer"
+                },
+                "pet_name": {
+                    "type": "string"
+                },
+                "species": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number"
                 }
             }
         },

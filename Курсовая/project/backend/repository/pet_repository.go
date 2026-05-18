@@ -2,6 +2,7 @@ package repository
 
 import (
 	"example/project/backend/models"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -14,6 +15,8 @@ type PetRepository interface {
 	AddWeightRecord(record *models.WeightHistory) error
 	Delete(id int64) error
 	GetWeightHistory(petId int64) ([]models.WeightHistory, error)
+	SearchByName(query string) ([]models.Pet, error)
+	GetAllPets() ([]models.Pet, error)
 }
 
 type petRepository struct {
@@ -56,4 +59,14 @@ func (r *petRepository) GetWeightHistory(petId int64) ([]models.WeightHistory, e
 	// Находим записи, подгружаем данные врача (если есть) и сортируем от старых к новым
 	err := r.db.Where("pet_id = ?", petId).Order("measured_at ASC").Find(&history).Error
 	return history, err
+}
+func (r *petRepository) SearchByName(query string) ([]models.Pet, error) {
+	var pets []models.Pet
+	err := r.db.Where("LOWER(nickname) LIKE ?", "%"+strings.ToLower(query)+"%").Find(&pets).Error
+	return pets, err
+}
+func (r *petRepository) GetAllPets() ([]models.Pet, error) {
+	var pets []models.Pet
+	err := r.db.Find(&pets).Error
+	return pets, err
 }

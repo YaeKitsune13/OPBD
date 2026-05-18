@@ -71,7 +71,7 @@ func main() {
 	invSrv := service.NewInventoryService(invRepo)
 	dashSrv := service.NewDashboardService(userRepo, petRepo, appRepo, visitRepo)
 	userSrv := service.NewUsersService(userRepo)
-
+	searchSrv := service.NewSearchService(petRepo, userRepo)
 	// 4. Инициализация Хендлеров (Слой API)
 	authHandler := handler.NewAuthHandler(authSrv)
 	petHandler := handler.NewPetHandler(petSrv)
@@ -82,6 +82,7 @@ func main() {
 	weightHandler := handler.NewWeightHandler(petSrv)
 	dashHandler := handler.NewDashboardHandler(dashSrv)
 	userHandler := handler.NewUserHandler(userSrv)
+	searchHandler := handler.NewSearchHandler(searchSrv)
 
 	// 5. Настройка Gin
 	r := gin.Default()
@@ -166,7 +167,7 @@ func main() {
 
 			// Dashboard (Обзор)
 			protected.GET("/dashboard/:ownerId", dashHandler.GetData)
-
+			protected.GET("/search", searchHandler.Search)
 			// --- ТОЛЬКО ДЛЯ АДМИНИСТРАТОРОВ ---
 			admin := protected.Group("/admin")
 			admin.Use(middleware.RoleMiddleware("admin"))

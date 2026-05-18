@@ -100,6 +100,27 @@ definitions:
       petName:
         type: string
     type: object
+  dto.PatientSearchResultDTO:
+    properties:
+      age:
+        type: integer
+      breed:
+        type: string
+      owner_id:
+        type: integer
+      owner_name:
+        type: string
+      owner_phone:
+        type: string
+      pet_id:
+        type: integer
+      pet_name:
+        type: string
+      species:
+        type: string
+      weight:
+        type: number
+    type: object
   dto.Pet:
     properties:
       breed:
@@ -1027,6 +1048,26 @@ paths:
       summary: Список питомцев владельца
       tags:
       - pets
+  /api/search:
+    get:
+      parameters:
+      - description: Кличка питомца или ФИО владельца
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PatientSearchResultDTO'
+            type: array
+      summary: Поиск пациентов
+      tags:
+      - search
   /api/visits:
     post:
       consumes:
