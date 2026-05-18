@@ -1,11 +1,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 
+const emit = defineEmits(["navigate"]);
 const appointments = ref([]);
 const doctorName = ref("");
 const today = ref("");
 const loading = ref(false);
-
 const toastMessage = ref("");
 const toastVisible = ref(false);
 
@@ -36,19 +36,6 @@ function badgeClass(status) {
     }
 }
 
-function statusLabel(status) {
-    switch (status) {
-        case "confirmed":
-            return "Подтверждено";
-        case "waiting":
-            return "Ожидание";
-        case "rejected":
-            return "Отклонено";
-        default:
-            return status;
-    }
-}
-
 async function loadSchedule() {
     loading.value = true;
     const token = localStorage.getItem("token");
@@ -61,17 +48,11 @@ async function loadSchedule() {
             doctorName.value =
                 `${me.user.last_name} ${me.user.first_name} ${me.user.middle_name ?? ""}`.trim();
         }
-
         const schedRes = await fetch("/api/doctors/me/schedule", {
             headers: { Authorization: `Bearer ${token}` },
         });
-        if (schedRes.ok) {
-            appointments.value = (await schedRes.json()) ?? [];
-        } else {
-            showToast("Ошибка загрузки расписания");
-        }
+        if (schedRes.ok) appointments.value = (await schedRes.json()) ?? [];
     } catch (e) {
-        console.error(e);
         showToast("Ошибка загрузки");
     } finally {
         loading.value = false;
@@ -90,14 +71,10 @@ async function updateStatus(id, status) {
             body: JSON.stringify({ status }),
         });
         if (res.ok) {
-            // ← было appointment_id, теперь appointmentId
             const item = appointments.value.find((a) => a.appointmentId === id);
             if (item) item.status = status;
-        } else {
-            showToast("Ошибка обновления статуса");
         }
     } catch (e) {
-        console.error(e);
         showToast("Ошибка");
     }
 }
@@ -123,14 +100,9 @@ onMounted(() => {
         </div>
 
         <div class="card">
-            <div v-if="loading" class="empty">
-                <div class="empty-icon">⏳</div>
-                <div>Загрузка...</div>
-            </div>
-
+            <div v-if="loading" class="empty">⏳ Загрузка расписания...</div>
             <div v-else-if="appointments.length === 0" class="empty">
-                <div class="empty-icon">🎉</div>
-                <div>На сегодня записей нет</div>
+                🎉 Сегодня приёмов нет
             </div>
 
             <div v-else class="schedule-list">
@@ -138,40 +110,37 @@ onMounted(() => {
                     v-for="app in appointments"
                     :key="app.appointmentId"
                     class="schedule-item"
-                    :class="{ 'item-waiting': app.status === 'waiting' }"
                 >
-                    <!-- Время -->
                     <div class="schedule-time">{{ app.time }}</div>
-
-                    <!-- Инфо -->
                     <div class="schedule-info">
                         <div class="schedule-name">
                             {{ app.petLabel }} — {{ app.ownerName }}
                         </div>
                         <div class="schedule-sub">
                             {{ app.breed }}
-                            <template v-if="app.reason"
-                                >· {{ app.reason }}</template
+                            <span v-if="app.reason" class="reason-text"
+                                >· {{ app.reason }}</span
                             >
                         </div>
                     </div>
 
-                    <!-- Статус -->
-                    <span class="badge" :class="badgeClass(app.status)">
-                        {{ statusLabel(app.status) }}
-                    </span>
+                    <span class="badge" :class="badgeClass(app.status)">{{
+                        app.status === "confirmed" ? "Подтвержден" : app.status
+                    }}</span>
 
-                    <!-- Действия -->
                     <div class="schedule-actions">
+                        <!-- РАЦИОНАЛЬНО: Кнопка "Принять" переводит на ведение приёма -->
                         <template v-if="app.status === 'confirmed'">
-                            <button class="btn btn-primary btn-sm">
+                            <button
+                                class="btn btn-primary btn-sm"
+                                @click="emit('navigate', 'conduct', app)"
+                            >
                                 Принять
                             </button>
                         </template>
                         <template v-else-if="app.status === 'waiting'">
                             <button
-                                class="btn btn-sm btn-ghost action-confirm"
-                                title="Подтвердить"
+                                class="btn btn-sm btn-ghost"
                                 @click="
                                     updateStatus(app.appointmentId, 'confirmed')
                                 "
@@ -179,8 +148,7 @@ onMounted(() => {
                                 ✓
                             </button>
                             <button
-                                class="btn btn-sm btn-ghost action-reject"
-                                title="Отклонить"
+                                class="btn btn-sm btn-ghost text-red"
                                 @click="
                                     updateStatus(app.appointmentId, 'rejected')
                                 "
@@ -192,8 +160,6 @@ onMounted(() => {
                 </div>
             </div>
         </div>
-
-        <div v-if="toastVisible" class="toast">{{ toastMessage }}</div>
     </div>
 </template>
 
@@ -201,82 +167,41 @@ onMounted(() => {
 .schedule-list {
     padding: 4px 8px;
 }
-
 .schedule-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 8px;
+    padding: 14px 8px;
     border-bottom: 1px solid var(--border);
-    border-radius: 6px;
-    transition: background 0.15s;
 }
-
-.schedule-item:last-child {
-    border-bottom: none;
-}
-
-.schedule-item:hover {
-    background: var(--bg2);
-}
-
-.item-waiting {
-    opacity: 0.85;
-}
-
 .schedule-time {
     font-family: monospace;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--accent);
-    min-width: 48px;
+    min-width: 50px;
 }
-
 .schedule-info {
     flex: 1;
     min-width: 0;
 }
-
 .schedule-name {
     font-weight: 600;
     font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
-
 .schedule-sub {
     font-size: 12px;
     color: var(--text3);
-    margin-top: 2px;
 }
-
+.reason-text {
+    color: var(--accent);
+    font-style: italic;
+}
 .schedule-actions {
     display: flex;
-    gap: 4px;
-    margin-left: 8px;
+    gap: 6px;
 }
-
-.action-confirm {
-    color: var(--accent);
-    font-size: 16px;
-}
-
-.action-reject {
-    color: var(--red);
-    font-size: 16px;
-}
-
-.toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--text1, #222);
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 8px;
-    z-index: 9999;
-    font-size: 14px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.text-red {
+    color: #ff4d4f;
 }
 </style>

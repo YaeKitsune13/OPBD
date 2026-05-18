@@ -121,6 +121,7 @@ func main() {
 			{
 				pets.GET("/owner/:ownerId", petHandler.GetByOwner)
 				pets.POST("", petHandler.AddPet)
+				pets.POST("/quick-register", petHandler.QuickRegister)
 				pets.PUT("/:petId", petHandler.UpdatePet)
 				pets.DELETE("/:petId", petHandler.DeletePet)
 			}
@@ -128,8 +129,6 @@ func main() {
 			// VisitController
 			visits := protected.Group("/visits")
 			{
-				// Можно добавить проверку RoleMiddleware("doctor", "admin") для POST,
-				// так как клиент не должен сам себе писать медкарту
 				visits.POST("", visitHandler.SaveVisitCard)
 				visits.GET("/pet/:petId", visitHandler.GetJournal)
 				visits.GET("/:id", visitHandler.GetById)
@@ -148,10 +147,10 @@ func main() {
 			// DoctorController
 			docs := protected.Group("/doctors")
 			{
-				docs.GET("/me", doctorHandler.GetMe)                     // ← сначала статичные
-				docs.GET("/me/schedule", doctorHandler.GetTodaySchedule) // ← сначала статичные
+				docs.GET("/me", doctorHandler.GetMe)
+				docs.GET("/me/schedule", doctorHandler.GetTodaySchedule)
 				docs.GET("", doctorHandler.GetBySpecialty)
-				docs.GET("/:id/schedule", doctorHandler.GetSchedule) // ← параметрические в конец
+				docs.GET("/:id/schedule", doctorHandler.GetSchedule)
 			}
 
 			// WeightController

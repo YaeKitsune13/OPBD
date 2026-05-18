@@ -37,21 +37,13 @@ func (r *visitRepository) GetByID(id int64) (*models.Visit, error) {
 
 func (r *visitRepository) GetByPetID(petId int64) ([]models.Visit, error) {
 	var visits []models.Visit
-
-	err := r.db.
-		Joins("JOIN appointments ON appointments.appointment_id = visits.appointment_id").
-		Where("appointments.pet_id = ?", petId).
-		Order("visits.visit_date DESC").
-		Find(&visits).Error
-
+	err := r.db.Where("pet_id = ?", petId).Order("visit_date DESC").Find(&visits).Error
 	return visits, err
 }
 
 func (r *visitRepository) GetByPeriod(start, end time.Time) ([]models.Visit, error) {
 	var visits []models.Visit
-	err := r.db.Preload("Appointment").
-		Where("visit_date BETWEEN ? AND ?", start, end).
-		Find(&visits).Error
+	err := r.db.Where("visit_date BETWEEN ? AND ?", start, end).Find(&visits).Error
 	return visits, err
 }
 
@@ -62,10 +54,7 @@ func (r *visitRepository) GetPopularServices(start, end time.Time) ([]dto.Popula
 		Joins("join services on services.service_id = visit_prescriptions.service_id").
 		Joins("join visits on visits.visit_id = visit_prescriptions.visit_id").
 		Where("visits.visit_date BETWEEN ? AND ?", start, end).
-		Group("services.name").
-		Order("count DESC").
-		Limit(5).
-		Scan(&result).Error
+		Group("services.name").Order("count DESC").Limit(5).Scan(&result).Error
 	return result, err
 }
 

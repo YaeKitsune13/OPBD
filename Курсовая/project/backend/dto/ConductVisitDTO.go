@@ -2,6 +2,7 @@ package dto
 
 type SelectPet struct {
 	Id     int64  `json:"id"`
+	PetId  int64  `json:"pet_id"`
 	Name   string `json:"name"`
 	Avatar string `json:"avatar"`
 	Breed  string `json:"breed"`

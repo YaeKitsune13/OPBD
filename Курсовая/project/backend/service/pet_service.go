@@ -5,8 +5,11 @@ import (
 	"example/project/backend/dto"
 	"example/project/backend/models"
 	"example/project/backend/repository"
+	"fmt"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type PetService interface {
@@ -17,6 +20,7 @@ type PetService interface {
 	UpdatePet(data dto.PetCardDTO) error
 	DeletePet(petId int64) error
 	GetWeightChartData(petId int64) ([]dto.WeightPointDTO, error)
+	QuickRegister(req dto.QuickRegisterRequest) (*dto.QuickRegisterResponse, error)
 }
 
 type petService struct {
@@ -197,4 +201,70 @@ func getEmojiAvatar(species string) string {
 	default:
 		return "🐾"
 	}
+}
+
+func (s *petService) QuickRegister(req dto.QuickRegisterRequest) (*dto.QuickRegisterResponse, error) {
+	var owner *models.User
+	var err error
+
+	if req.IsAnonymous {
+		// Логика Анонима: ищем системного пользователя "Гость"
+		owner, err = s.userRepo.GetByPhone("0000") // Системный номер
+		if err != nil {
+			// Если гостя нет в базе — создаем один раз
+			pass, _ := bcrypt.GenerateFromPassword([]byte("guest_pass"), 10)
+			owner = &models.User{
+				FirstName: "Анонимный", LastName: "Владелец",
+				Phone: "0000", Email: "anonymous@clinic.local",
+				PasswordHash: string(pass), Role: models.RoleClient,
+			}
+			s.userRepo.Create(owner)
+		}
+		req.PetName = "Пациент " + time.Now().Format("15:04") // Генерим имя, если пусто
+	} else {
+		// Логика обычного быстрого клиента
+		owner, err = s.userRepo.GetByPhone(req.OwnerPhone)
+		if err != nil {
+			// Создаем нового владельца
+			names := strings.Split(req.OwnerName, " ")
+			fName := names[0]
+			lName := "Клиент"
+			if len(names) > 1 {
+				lName = names[1]
+			}
+
+			pass, _ := bcrypt.GenerateFromPassword([]byte("123456"), 10)
+			owner = &models.User{
+				FirstName: fName, LastName: lName,
+				Phone:        req.OwnerPhone,
+				Email:        fmt.Sprintf("user_%s@clinic.temp", req.OwnerPhone),
+				PasswordHash: string(pass), Role: models.RoleClient,
+			}
+			if err := s.userRepo.Create(owner); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Создаем питомца
+	newPet := &models.Pet{
+		OwnerID:       owner.UserID,
+		Nickname:      req.PetName,
+		Species:       req.Species,
+		Breed:         req.Breed,
+		BirthDate:     time.Now(),
+		CurrentWeight: 0.1, // ФИКС: обходим ограничение базы (вес > 0)
+		Photo:         getEmojiAvatar(req.Species),
+	}
+
+	if err := s.petRepo.Create(newPet); err != nil {
+		return nil, err
+	}
+
+	return &dto.QuickRegisterResponse{
+		PetID:     newPet.PetID,
+		PetName:   newPet.Nickname,
+		OwnerName: owner.FirstName + " " + owner.LastName,
+		Breed:     newPet.Breed,
+	}, nil
 }

@@ -10,5 +10,5 @@ type Pet struct {
 	Breed         string    `json:"breed" gorm:"type:varchar(100)"`
 	BirthDate     time.Time `json:"birth_date" gorm:"type:date;not null"`
 	Photo         string    `json:"photo" gorm:"type:varchar(255)"`
-	CurrentWeight float64   `json:"current_weight" gorm:"type:decimal(5,2);check:current_weight > 0.1 AND current_weight < 300"`
+	CurrentWeight float64   `json:"current_weight" gorm:"type:decimal(5,2);"`
 }

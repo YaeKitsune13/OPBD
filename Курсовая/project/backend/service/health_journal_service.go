@@ -26,73 +26,55 @@ func NewHealthJournalService(vr repository.VisitRepository, dr repository.Doctor
 }
 
 func (s *healthJournalService) GetPetHistory(petId int64) ([]dto.HealthJournalDTO, error) {
-	// 1. Получаем список визитов для питомца
 	visits, err := s.visitRepo.GetByPetID(petId)
 	if err != nil {
 		return nil, err
 	}
 
 	var history []dto.HealthJournalDTO
-
 	for _, v := range visits {
-		// 1. Получаем данные врача
-		doctor, err := s.doctorRepo.GetByID(v.Appointment.DoctorID)
-		doctorName := "Врач не указан"
-
-		if err == nil && doctor != nil {
-			// Безопасно берем первую букву имени (работает с кириллицей)
-			firstNameRunes := []rune(doctor.User.FirstName)
-			initial := ""
-			if len(firstNameRunes) > 0 {
-				initial = string(firstNameRunes[0])
-			}
-
-			// ИСПРАВЛЕНИЕ: Обращаемся к doctor.User.LastName и initial
-			doctorName = fmt.Sprintf("%s %s.", doctor.User.LastName, initial)
-		}
-
-		// 2. Собираем DTO
 		item := dto.HealthJournalDTO{
-			VisitId:         v.VisitId,
-			Date:            v.Appointment.ScheduledAt.Format("02.01.2006"),
-			Time:            v.Appointment.ScheduledAt.Format("15:04"),
-			Doctor:          doctorName,
-			Diagnosis:       v.Diagnosis,
-			Details:         v.Anamnesis,
-			Analysis:        v.Analysis,
-			Recommendations: v.Recommendations,
-			Price:           fmt.Sprintf("%.2f ₽", v.TotalCost),
+			VisitId:   v.VisitId,
+			Date:      v.VisitDate.Format("02.01.2006"),
+			Time:      v.VisitDate.Format("15:04"),
+			Diagnosis: v.Diagnosis,
+			Details:   v.Anamnesis,
+			Price:     fmt.Sprintf("%.2f ₽", v.TotalCost),
 		}
-
 		history = append(history, item)
 	}
-
 	return history, nil
 }
 
 func (s *healthJournalService) SaveVisit(data dto.ConductVisitDTO) error {
 	newVisit := &models.Visit{
-		AppointmentID: data.SelectedPet.Id,
-		Anamnesis:     data.Anamnesis,
-		Diagnosis:     data.Diagnosis,
-		TotalCost:     float64(data.TotalCost),
-		VisitDate:     time.Now(),
+		PetID:     data.SelectedPet.PetId,
+		Anamnesis: data.Anamnesis,
+		Diagnosis: data.Diagnosis,
+		TotalCost: float64(data.TotalCost),
+		VisitDate: time.Now(),
+	}
+
+	// Если Id (AppointmentID) равен 0, в базу запишется NULL (благодаря указателю в модели)
+	if data.SelectedPet.Id > 0 {
+		id := data.SelectedPet.Id
+		newVisit.AppointmentID = &id
+	} else {
+		newVisit.AppointmentID = nil
 	}
 
 	if err := s.visitRepo.Create(newVisit); err != nil {
 		return fmt.Errorf("ошибка создания визита: %w", err)
 	}
 
-	// 2. Сохраняем услуги из корзины
 	for _, a := range data.Assignments {
 		prescription := &models.VisitPrescription{
 			VisitID:   newVisit.VisitId,
-			ItemType:  models.TypeService, // Используем константу "service"
+			ItemType:  models.TypeService,
 			ServiceID: &a.Id,
 			Quantity:  int64(a.Qty),
 			UnitPrice: a.Price,
 		}
-
 		if err := s.visitRepo.AddPrescription(prescription); err != nil {
 			return fmt.Errorf("ошибка сохранения услуги %s: %w", a.Name, err)
 		}

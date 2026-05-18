@@ -124,3 +124,18 @@ func (h *PetHandler) DeletePet(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Питомец удален"})
 }
+func (h *PetHandler) QuickRegister(c *gin.Context) {
+	var req dto.QuickRegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Некорректные данные"})
+		return
+	}
+
+	res, err := h.srv.QuickRegister(req)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, res)
+}
