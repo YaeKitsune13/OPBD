@@ -9,6 +9,7 @@ type DoctorService interface {
 	GetBySpecialty(specialty string) ([]models.Doctor, error)
 	GetAll() ([]models.Doctor, error)
 	CreateDoctor(doctor *models.Doctor) error
+	GetByUserID(userID int64) (*models.Doctor, error)
 }
 
 type doctorService struct {
@@ -29,4 +30,7 @@ func (s *doctorService) GetAll() ([]models.Doctor, error) {
 
 func (s *doctorService) CreateDoctor(doctor *models.Doctor) error {
 	return s.repo.Create(doctor)
+}
+func (s *doctorService) GetByUserID(userID int64) (*models.Doctor, error) {
+	return s.repo.GetByUserID(userID)
 }

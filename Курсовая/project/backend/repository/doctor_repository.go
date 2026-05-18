@@ -26,10 +26,9 @@ func (r *doctorRepository) GetByID(id int64) (*models.Doctor, error) {
 	return &doctor, err
 }
 
-func (r *doctorRepository) GetByUserID(user_id int64) (*models.Doctor, error) {
+func (r *doctorRepository) GetByUserID(userID int64) (*models.Doctor, error) {
 	var doctor models.Doctor
-	// ИСПРАВЛЕНО: поле в базе теперь user_id
-	err := r.db.Preload("User").Where("user_id = ?", user_id).First(&doctor).Error
+	err := r.db.Preload("User").Where("user_id = ?", userID).First(&doctor).Error
 	return &doctor, err
 }
 

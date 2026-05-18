@@ -72,3 +72,41 @@ func (h *DoctorHandler) GetBySpecialty(c *gin.Context) {
 
 	c.JSON(http.StatusOK, doctors)
 }
+
+// GetMe godoc
+// @Summary      Получить профиль текущего доктора
+// @Tags         doctors
+// @Produce      json
+// @Success      200 {object} models.Doctor
+// @Router       /api/doctors/me [get]
+func (h *DoctorHandler) GetMe(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	doctor, err := h.doctorSrv.GetByUserID(userID.(int64))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Профиль доктора не найден"})
+		return
+	}
+	c.JSON(http.StatusOK, doctor)
+}
+
+// GetTodaySchedule godoc
+// @Summary      Расписание доктора на сегодня
+// @Tags         doctors
+// @Produce      json
+// @Success      200 {array} dto.TodayScheduleDTO
+// @Router       /api/doctors/me/schedule [get]
+func (h *DoctorHandler) GetTodaySchedule(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	doctor, err := h.doctorSrv.GetByUserID(userID.(int64))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Профиль доктора не найден"})
+		return
+	}
+
+	schedule, err := h.appSrv.GetDoctorTodaySchedule(doctor.DoctorID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка загрузки расписания"})
+		return
+	}
+	c.JSON(http.StatusOK, schedule)
+}

@@ -148,8 +148,10 @@ func main() {
 			// DoctorController
 			docs := protected.Group("/doctors")
 			{
+				docs.GET("/me", doctorHandler.GetMe)                     // ← сначала статичные
+				docs.GET("/me/schedule", doctorHandler.GetTodaySchedule) // ← сначала статичные
 				docs.GET("", doctorHandler.GetBySpecialty)
-				docs.GET("/:id/schedule", doctorHandler.GetSchedule)
+				docs.GET("/:id/schedule", doctorHandler.GetSchedule) // ← параметрические в конец
 			}
 
 			// WeightController
