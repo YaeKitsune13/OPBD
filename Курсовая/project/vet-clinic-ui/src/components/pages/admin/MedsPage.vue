@@ -75,7 +75,7 @@ const filteredMeds = computed(() => {
 async function loadMeds() {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch("/api/admin/meds", {
+        const response = await fetch("/api/meds", {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {

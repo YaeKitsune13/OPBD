@@ -5,6 +5,7 @@ import (
 	"example/project/backend/models"
 	"example/project/backend/repository"
 	"fmt"
+	"time"
 )
 
 type HealthJournalService interface {
@@ -70,13 +71,32 @@ func (s *healthJournalService) GetPetHistory(petId int64) ([]dto.HealthJournalDT
 }
 
 func (s *healthJournalService) SaveVisit(data dto.ConductVisitDTO) error {
-	// Создаем модель визита на основе DTO
 	newVisit := &models.Visit{
-		AppointmentID: data.SelectedPet.Id, // Предположим, тут передаем ID записи
+		AppointmentID: data.SelectedPet.Id,
 		Anamnesis:     data.Anamnesis,
 		Diagnosis:     data.Diagnosis,
 		TotalCost:     float64(data.TotalCost),
+		VisitDate:     time.Now(),
 	}
 
-	return s.visitRepo.Create(newVisit)
+	if err := s.visitRepo.Create(newVisit); err != nil {
+		return fmt.Errorf("ошибка создания визита: %w", err)
+	}
+
+	// 2. Сохраняем услуги из корзины
+	for _, a := range data.Assignments {
+		prescription := &models.VisitPrescription{
+			VisitID:   newVisit.VisitId,
+			ItemType:  models.TypeService, // Используем константу "service"
+			ServiceID: &a.Id,
+			Quantity:  int64(a.Qty),
+			UnitPrice: a.Price,
+		}
+
+		if err := s.visitRepo.AddPrescription(prescription); err != nil {
+			return fmt.Errorf("ошибка сохранения услуги %s: %w", a.Name, err)
+		}
+	}
+
+	return nil
 }

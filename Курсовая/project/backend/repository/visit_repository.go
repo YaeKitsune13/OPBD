@@ -14,6 +14,7 @@ type VisitRepository interface {
 	GetByPetID(petId int64) ([]models.Visit, error)
 	GetByPeriod(start, end time.Time) ([]models.Visit, error)
 	GetPopularServices(start, end time.Time) ([]dto.PopularServices, error)
+	AddPrescription(p *models.VisitPrescription) error
 }
 
 type visitRepository struct {
@@ -54,10 +55,8 @@ func (r *visitRepository) GetByPeriod(start, end time.Time) ([]models.Visit, err
 	return visits, err
 }
 
-// В репозиторий:
 func (r *visitRepository) GetPopularServices(start, end time.Time) ([]dto.PopularServices, error) {
 	var result []dto.PopularServices
-	// Сложный запрос с JOIN и GROUP BY
 	err := r.db.Table("visit_prescriptions").
 		Select("services.name as name, count(*) as count, sum(visit_prescriptions.unit_price * visit_prescriptions.quantity) as revenue").
 		Joins("join services on services.service_id = visit_prescriptions.service_id").
@@ -68,4 +67,8 @@ func (r *visitRepository) GetPopularServices(start, end time.Time) ([]dto.Popula
 		Limit(5).
 		Scan(&result).Error
 	return result, err
+}
+
+func (r *visitRepository) AddPrescription(p *models.VisitPrescription) error {
+	return r.db.Create(p).Error
 }

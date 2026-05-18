@@ -166,7 +166,8 @@ func main() {
 				users.PUT("/:id", userHandler.UpdateProfile)
 				users.PUT("/:id/password", userHandler.ChangePassword)
 			}
-
+			protected.GET("/meds", adminHandler.GetMeds)
+			protected.GET("/services", adminHandler.GetAllServices)
 			// Dashboard (Обзор)
 			protected.GET("/dashboard/:ownerId", dashHandler.GetData)
 			protected.GET("/search", searchHandler.Search)
@@ -182,12 +183,10 @@ func main() {
 
 				admin.POST("/doctors", adminHandler.CreateDoctor)
 
-				admin.GET("/services", adminHandler.GetAllServices)
 				admin.DELETE("/services/:id", adminHandler.DeleteService)
 				admin.POST("/services", adminHandler.CreateSrv)
 				admin.PUT("/services/:id", adminHandler.UpdateService)
 
-				admin.GET("/meds", adminHandler.GetMeds)
 				admin.POST("/meds", adminHandler.CreateMed)
 				admin.PUT("/meds/:id", adminHandler.UpdateMed)
 				admin.DELETE("/meds/:id", adminHandler.DeleteMed)

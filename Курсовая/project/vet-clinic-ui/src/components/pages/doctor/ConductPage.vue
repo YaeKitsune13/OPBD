@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import BaseModal from "../../ui/BaseModal.vue";
 import PetCombobox from "../../ui/PetCombobox.vue";
 
@@ -18,40 +18,66 @@ const loading = ref(false);
 const toastMessage = ref("");
 const toastVisible = ref(false);
 
+// Логируем изменение выбранного питомца
+watch(selectedPet, (newPet) => {
+    console.log("[ConductVisit] Выбран питомец:", newPet);
+});
+
 const totalCost = computed(() => {
-    return assignments.value.reduce(
+    const total = assignments.value.reduce(
         (sum, item) => sum + item.price * item.qty,
         0,
     );
+    console.log("[ConductVisit] Пересчет итоговой стоимости:", total);
+    return total;
 });
 
 function showToast(message) {
+    console.log("[ConductVisit] Показ уведомления:", message);
     toastMessage.value = message;
     toastVisible.value = true;
     setTimeout(() => (toastVisible.value = false), 3000);
 }
 
 async function loadServices() {
+    console.log("[ConductVisit] Загрузка списка услуг...");
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch(`/api/admin/services`, {
+        const response = await fetch(`/api/services`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
-            allServices.value = (await response.json()) ?? [];
+            const data = await response.json();
+            allServices.value = data ?? [];
+            console.log(
+                "[ConductVisit] Услуги успешно загружены. Количество:",
+                allServices.value.length,
+            );
+        } else {
+            console.error(
+                "[ConductVisit] Ошибка при загрузке услуг. Статус:",
+                response.status,
+            );
         }
     } catch (e) {
-        console.error(e);
+        console.error("[ConductVisit] Критическая ошибка loadServices:", e);
     }
 }
 
 function removeItem(id) {
+    console.log("[ConductVisit] Удаление услуги с ID:", id);
     assignments.value = assignments.value.filter((i) => i.id !== id);
 }
 
 function addService() {
+    console.log(
+        "[ConductVisit] Попытка добавить услугу. ID выбранной услуги:",
+        selectedServiceId.value,
+    );
+
     if (!selectedServiceId.value) {
+        console.warn("[ConductVisit] Услуга не выбрана");
         showToast("Выберите услугу");
         return;
     }
@@ -59,10 +85,14 @@ function addService() {
     const service = allServices.value.find(
         (s) => s.id === selectedServiceId.value,
     );
+
     if (service) {
         const existing = assignments.value.find((a) => a.id === service.id);
         if (existing) {
             existing.qty++;
+            console.log(
+                `[ConductVisit] Услуга "${service.name}" уже есть, увеличиваем количество до ${existing.qty}`,
+            );
         } else {
             assignments.value.push({
                 id: service.id,
@@ -71,19 +101,27 @@ function addService() {
                 price: service.price,
                 qty: 1,
             });
+            console.log(
+                `[ConductVisit] Добавлена новая услуга: ${service.name}`,
+            );
         }
         isServiceModalOpen.value = false;
         selectedServiceId.value = null;
         showToast("Услуга добавлена");
+    } else {
+        console.error(
+            "[ConductVisit] Выбранная услуга не найдена в общем списке allServices",
+        );
     }
 }
 
 async function saveVisit() {
+    console.log("[ConductVisit] Начало сохранения...");
+
     if (!selectedPet.value) {
         showToast("Выберите питомца");
         return;
     }
-
     if (!diagnosis.value.trim()) {
         showToast("Введите диагноз");
         return;
@@ -97,17 +135,35 @@ async function saveVisit() {
     loading.value = true;
     const token = localStorage.getItem("token");
 
-    try {
-        const payload = {
-            pet_id: selectedPet.value.pet_id || selectedPet.value.id,
-            anamnesis: anamnesis.value,
-            diagnosis: diagnosis.value,
-            assignments: assignments.value.map((a) => ({
-                service_id: a.id,
-                qty: a.qty,
-            })),
-        };
+    // Формируем payload строго под твой Go DTO
+    const payload = {
+        selectedPet: {
+            // ВАЖНО: Твой бэкенд использует это как AppointmentID.
+            // Если мы идем через поиск (без записи), это может вызвать ошибку в базе.
+            id: Number(selectedPet.value.pet_id || selectedPet.value.id),
+            name: selectedPet.value.pet_name || selectedPet.value.name,
+            avatar: "🐾",
+            breed: selectedPet.value.breed || "",
+            owner: selectedPet.value.owner_name || "",
+        },
+        anamnesis: anamnesis.value,
+        diagnosis: diagnosis.value,
+        assignments: assignments.value.map((a) => ({
+            id: Number(a.id),
+            name: a.name,
+            type: "service", // БЫЛО "Услуга", ДОЛЖНО БЫТЬ "service" (для БД)
+            price: Number(a.price),
+            qty: Number(a.qty),
+        })),
+        totalCost: Math.round(totalCost.value), // Go ждет int64
+    };
 
+    console.log(
+        "[ConductVisit] Итоговый Payload для отправки:",
+        JSON.stringify(payload, null, 2),
+    );
+
+    try {
         const response = await fetch(`/api/visits`, {
             method: "POST",
             headers: {
@@ -118,25 +174,29 @@ async function saveVisit() {
         });
 
         if (response.ok) {
+            console.log("[ConductVisit] Успешно сохранено!");
             showToast("Приём сохранён успешно");
-            // Очистить форму
+            // Очистка
             selectedPet.value = null;
             anamnesis.value = "";
             diagnosis.value = "";
             assignments.value = [];
             setTimeout(() => emit("navigate", "today"), 1500);
         } else {
-            showToast("Ошибка при сохранении приёма");
+            const errorData = await response.json();
+            console.error("[ConductVisit] Ошибка сервера:", errorData);
+            showToast(errorData.error || "Ошибка сервера");
         }
     } catch (e) {
-        console.error(e);
-        showToast("Ошибка при сохранении приёма");
+        console.error("[ConductVisit] Ошибка запроса:", e);
+        showToast("Сетевая ошибка: " + e.message);
     } finally {
         loading.value = false;
     }
 }
 
 onMounted(() => {
+    console.log("[ConductVisit] Компонент смонтирован");
     loadServices();
 });
 </script>
@@ -242,7 +302,7 @@ onMounted(() => {
         >
             <div class="form-group">
                 <label>Выберите услугу</label>
-                <select v-model="selectedServiceId" class="mt-4">
+                <select v-model.number="selectedServiceId" class="mt-4">
                     <option :value="null">-- Выберите --</option>
                     <option
                         v-for="service in allServices"

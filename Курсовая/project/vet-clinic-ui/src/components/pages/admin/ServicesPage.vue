@@ -44,7 +44,7 @@ function showToast(message) {
 async function loadServices() {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch("/api/admin/services", {
+        const response = await fetch("/api/services", {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
