@@ -1,0 +1,1133 @@
+basePath: /api
+definitions:
+  dto.BookingInitResponse:
+    properties:
+      doctors:
+        items:
+          $ref: '#/definitions/dto.DoctorDTO'
+        type: array
+      pets:
+        items:
+          $ref: '#/definitions/dto.PetBriefDTO'
+        type: array
+      services:
+        items:
+          $ref: '#/definitions/dto.ServiceDTO'
+        type: array
+    type: object
+  dto.CartItemResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      productId:
+        type: integer
+      quantity:
+        type: integer
+    type: object
+  dto.ChangePasswordRequest:
+    properties:
+      current:
+        type: string
+      next:
+        minLength: 8
+        type: string
+    required:
+    - current
+    - next
+    type: object
+  dto.CompleteVisitRequest:
+    properties:
+      diagnosis_ids:
+        items:
+          type: integer
+        type: array
+      medications:
+        type: string
+      treatment:
+        type: string
+      weight:
+        type: number
+    required:
+    - diagnosis_ids
+    - weight
+    type: object
+  dto.CreateAppointmentRequest:
+    properties:
+      comment:
+        type: string
+      doctor_id:
+        type: integer
+      pet_id:
+        type: integer
+      scheduled_at:
+        description: '"2024-05-20T09:00:00"'
+        type: string
+      service_id:
+        type: integer
+    required:
+    - doctor_id
+    - pet_id
+    - scheduled_at
+    type: object
+  dto.DashboardResponse:
+    properties:
+      appointmentsCount:
+        type: integer
+      nextAppointment:
+        $ref: '#/definitions/dto.NextAppointmentDTO'
+      pets:
+        items:
+          $ref: '#/definitions/dto.PetBriefDTO'
+        type: array
+      petsCount:
+        type: integer
+      recentAppointments:
+        items:
+          $ref: '#/definitions/dto.RecentAppointmentDTO'
+        type: array
+      visitsCount:
+        type: integer
+    type: object
+  dto.DiagnosisDTO:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  dto.DoctorDTO:
+    properties:
+      doctorId:
+        type: integer
+      firstName:
+        type: string
+      lastName:
+        type: string
+      specialization:
+        type: string
+    type: object
+  dto.DoctorScheduleDTO:
+    properties:
+      date:
+        type: string
+      id:
+        type: integer
+      ownerName:
+        type: string
+      petName:
+        type: string
+      service:
+        type: string
+      status:
+        type: string
+      time:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.LoginResponse:
+    properties:
+      lastName:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      token:
+        type: string
+      userId:
+        type: integer
+      userName:
+        type: string
+    type: object
+  dto.MedicalProtocolDTO:
+    properties:
+      diagnoses:
+        items:
+          $ref: '#/definitions/dto.DiagnosisDTO'
+        type: array
+      medications:
+        type: string
+      treatment:
+        type: string
+      weight:
+        type: number
+    type: object
+  dto.NextAppointmentDTO:
+    properties:
+      date:
+        type: string
+      petName:
+        type: string
+      time:
+        type: string
+    type: object
+  dto.OrderItemResponse:
+    properties:
+      name:
+        type: string
+      price:
+        type: integer
+      quantity:
+        type: integer
+    type: object
+  dto.OrderRequest:
+    properties:
+      totalAmount:
+        type: integer
+      userId:
+        type: integer
+    type: object
+  dto.OrderResponse:
+    properties:
+      date:
+        type: string
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/dto.OrderItemResponse'
+        type: array
+      status:
+        type: string
+      totalAmount:
+        type: integer
+    type: object
+  dto.PatientDTO:
+    properties:
+      email:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: integer
+      lastVisit:
+        type: string
+      petsCount:
+        type: integer
+      phone:
+        type: string
+    type: object
+  dto.PetBriefDTO:
+    properties:
+      avatar:
+        type: string
+      breed:
+        type: string
+      dob:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      weight:
+        type: number
+    type: object
+  dto.PetHistoryDTO:
+    properties:
+      petIcon:
+        type: string
+      petName:
+        type: string
+      visits:
+        items:
+          $ref: '#/definitions/dto.VisitTimelineDTO'
+        type: array
+    type: object
+  dto.PetRequest:
+    properties:
+      avatar:
+        type: string
+      breed:
+        type: string
+      dob:
+        type: string
+      name:
+        type: string
+      species:
+        type: string
+      weight:
+        type: number
+    required:
+    - dob
+    - name
+    - species
+    type: object
+  dto.PetResponse:
+    properties:
+      avatar:
+        type: string
+      breed:
+        type: string
+      dob:
+        type: string
+      name:
+        type: string
+      petId:
+        type: integer
+      species:
+        type: string
+      weight:
+        type: number
+    type: object
+  dto.ProductResponse:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      stock:
+        type: integer
+    type: object
+  dto.RecentAppointmentDTO:
+    properties:
+      date:
+        type: string
+      doctorName:
+        type: string
+      id:
+        type: integer
+      petName:
+        type: string
+      protocol:
+        $ref: '#/definitions/dto.MedicalProtocolDTO'
+      service:
+        type: string
+      status:
+        type: string
+      time:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    type: object
+  dto.ServiceDTO:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+    type: object
+  dto.UpdateProfileRequest:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    required:
+    - firstName
+    - lastName
+    type: object
+  dto.UserProfileResponse:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: integer
+      lastName:
+        type: string
+      petsCount:
+        type: integer
+      phone:
+        type: string
+      role:
+        type: string
+      visitsCount:
+        type: integer
+    type: object
+  dto.VisitTimelineDTO:
+    properties:
+      date:
+        type: string
+      diagnoses:
+        items:
+          $ref: '#/definitions/dto.DiagnosisDTO'
+        type: array
+      id:
+        type: integer
+      treatment:
+        type: string
+    type: object
+  dto.WeightDataDTO:
+    properties:
+      date:
+        type: string
+      weight:
+        type: number
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: API server for Veterinary Clinic management system.
+  title: Veterinary Clinic API
+  version: "1.0"
+paths:
+  /appointments:
+    post:
+      consumes:
+      - application/json
+      description: Бронирует визит к врачу
+      parameters:
+      - description: Данные записи
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создание записи на прием
+      tags:
+      - booking
+  /appointments/{id}/complete:
+    patch:
+      consumes:
+      - application/json
+      description: Закрывает визит и сохраняет медицинский протокол (диагноз, вес,
+        лечение)
+      parameters:
+      - description: ID записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные осмотра
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CompleteVisitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Завершение приема
+      tags:
+      - doctor
+  /appointments/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Принять (confirmed) или отклонить (rejected) запись
+      parameters:
+      - description: ID записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новый статус
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            status:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить статус записи
+      tags:
+      - doctor
+  /appointments/busy-slots:
+    get:
+      description: Возвращает список времени, на которое уже есть запись у врача
+      parameters:
+      - description: ID врача
+        in: query
+        name: doctor_id
+        required: true
+        type: integer
+      - description: Дата (YYYY-MM-DD)
+        in: query
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получение занятых слотов
+      tags:
+      - booking
+  /appointments/client/{userId}:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.RecentAppointmentDTO'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: История визитов клиента
+      tags:
+      - booking
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентификация и получение JWT токена
+      parameters:
+      - description: Данные входа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Вход в систему
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Создает новый аккаунт клиента
+      parameters:
+      - description: Данные регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация пользователя
+      tags:
+      - auth
+  /book/init/{userId}:
+    get:
+      description: Получает списки питомцев, врачей и услуг
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BookingInitResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Инициализация формы записи
+      tags:
+      - booking
+  /cart/{itemId}:
+    delete:
+      parameters:
+      - description: ID элемента корзины
+        in: path
+        name: itemId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить из корзины
+      tags:
+      - shop
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID элемента корзины
+        in: path
+        name: itemId
+        required: true
+        type: integer
+      - description: Новое количество
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            quantity:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить количество в корзине
+      tags:
+      - shop
+  /cart/{userId}:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CartItemResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получить корзину
+      tags:
+      - shop
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: ID товара и количество
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            productId:
+              type: integer
+            quantity:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить в корзину
+      tags:
+      - shop
+  /dashboard/{userId}:
+    get:
+      description: Получает сводку статистики, ближайшую запись и список питомцев
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DashboardResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Данные дашборда
+      tags:
+      - dashboard
+  /diagnoses:
+    get:
+      description: Возвращает справочник диагнозов для выбора врачом
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DiagnosisDTO'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Список диагнозов
+      tags:
+      - diagnosis
+  /doctor/patients:
+    get:
+      description: Search for clients by name or phone
+      parameters:
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PatientDTO'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Search patients
+      tags:
+      - doctor
+  /doctor/patients/{id}/history:
+    get:
+      description: Получает историю всех визитов всех питомцев конкретного клиента
+      parameters:
+      - description: ID клиента
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PetHistoryDTO'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Медицинская история клиента
+      tags:
+      - doctor
+  /doctor/schedule:
+    get:
+      description: Список всех записей к конкретному врачу
+      parameters:
+      - description: ID врача
+        in: query
+        name: doctor_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DoctorScheduleDTO'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Расписание врача
+      tags:
+      - doctor
+  /medications:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ProductResponse'
+            type: array
+      summary: Каталог товаров
+      tags:
+      - shop
+  /orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные заказа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Оформить заказ
+      tags:
+      - shop
+  /orders/{userId}:
+    get:
+      description: Получает список всех заказов пользователя с деталями товаров для
+        чека
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.OrderResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: История заказов
+      tags:
+      - shop
+  /pets:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID владельца
+        in: query
+        name: ownerId
+        required: true
+        type: integer
+      - description: Данные питомца
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PetRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PetResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить питомца
+      tags:
+      - pets
+  /pets/{petId}:
+    delete:
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить питомца
+      tags:
+      - pets
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PetResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Редактировать питомца
+      tags:
+      - pets
+  /pets/owner/{userId}:
+    get:
+      parameters:
+      - description: ID владельца
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PetResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Список питомцев владельца
+      tags:
+      - pets
+  /stats/pets/{userId}:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+              type: object
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Список питомцев пользователя (краткий)
+      tags:
+      - stats
+  /stats/weight/{petId}:
+    get:
+      parameters:
+      - description: ID питомца
+        in: path
+        name: petId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.WeightDataDTO'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Данные веса для графика
+      tags:
+      - stats
+  /users/{id}:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserProfileResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Профиль пользователя
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить профиль
+      tags:
+      - user
+  /users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Пароли
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Сменить пароль
+      tags:
+      - user
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
