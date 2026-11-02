@@ -5,45 +5,37 @@ using System.Diagnostics;
 [DebuggerDisplay("x={X}, f(x)={Y}, разрыв={IsDiscontinuous}")]
 class Point
 {
-    public double X { get; set; }
-    public double Y { get; set; }
-    public bool IsDiscontinuous { get; set; }
+    public double X, Y;
+    public bool IsDiscontinuous => double.IsNaN(Y);
 
-    public Point(double x, double y, bool isDiscontinuous)
+    public Point(double x, double y)
     {
         X = x;
         Y = y;
-        IsDiscontinuous = isDiscontinuous;
     }
 }
 
 class ProgramHyperbola
 {
-    private static TraceSource trace = new TraceSource("Hyperbola");
+    const double Epsilon = 1e-6;
+    static TraceSource trace = new TraceSource("Hyperbola");
 
-    static void Main(string[] args)
+    static void Main()
     {
-        Console.WriteLine("=== Программа: Гипербола f(x) = 1/x ===");
+        trace.Switch.Level = SourceLevels.All;
+        trace.Listeners.Add(new ConsoleTraceListener());
 
-        Console.Write("Введите x для расчета f(x): ");
-        if (double.TryParse(Console.ReadLine(), out double x))
-        {
-            CalculateSingle(x);
-        }
-        else
-        {
-            Console.WriteLine("Вы ввели не число.");
-        }
+        Console.Write("Введите x: ");
+        double x = double.Parse(Console.ReadLine());
+        double y = F(x);
+        Console.WriteLine(double.IsNaN(y) ? "Разрыв" : $"f({x}) = {y}");
 
-        Console.WriteLine("\n--- Построение таблицы значений ---");
-        Console.Write("Введите начало интервала (a): ");
-        double.TryParse(Console.ReadLine(), out double a);
-
-        Console.Write("Введите конец интервала (b): ");
-        double.TryParse(Console.ReadLine(), out double b);
-
-        Console.Write("Введите шаг (h): ");
-        double.TryParse(Console.ReadLine(), out double h);
+        Console.Write("Введите a: ");
+        double a = double.Parse(Console.ReadLine());
+        Console.Write("Введите b: ");
+        double b = double.Parse(Console.ReadLine());
+        Console.Write("Введите шаг h: ");
+        double h = double.Parse(Console.ReadLine());
 
         if (h <= 0)
         {
@@ -51,85 +43,36 @@ class ProgramHyperbola
             return;
         }
 
-        BuildTable(a, b, h);
-    }
-
-    static void CalculateSingle(double x)
-    {
-        const double epsilon = 1e-6;
-
-        Debug.Assert(x != 0, "Точка разрыва: деление на 0");
-
-        if (Math.Abs(x) < 1e-9 && Debugger.IsAttached)
-        {
-            Debugger.Break();
-        }
-
-        if (Math.Abs(x) < epsilon)
-        {
-            if (x == 0)
-            {
-                trace.TraceEvent(TraceEventType.Error, 1, "Ошибка: x = 0 (деление на ноль)");
-            }
-            else
-            {
-                trace.TraceEvent(TraceEventType.Warning, 2, "Предупреждение: x в окрестности точки разрыва 0");
-            }
-
-            Console.WriteLine("Разрыв: значение не вычисляется (слишком близко к 0).");
-            return;
-        }
-
-        double y = 1.0 / x;
-        Debug.WriteLine($"x={x}, f={y}");
-        Console.WriteLine($"Результат: f({x}) = {y}");
-    }
-
-    static void BuildTable(double a, double b, double h)
-    {
-        var stopwatch = new Stopwatch();
         var points = new List<Point>();
-        const double epsilon = 1e-6;
+        var timer = Stopwatch.StartNew();
+        for (double t = a; t <= b; t += h)
+            points.Add(new Point(t, F(t)));
+        timer.Stop();
 
-        stopwatch.Start();
-
-        for (double x = a; x <= b; x += h)
-        {
-            if (Math.Abs(x) < 1e-12) x = 0;
-
-            bool isDiscontinuous = Math.Abs(x) < epsilon;
-
-            if (isDiscontinuous || x == 0)
-            {
-                if (x == 0)
-                {
-                    trace.TraceEvent(TraceEventType.Error, 1, $"Ошибка в таблице: x = 0 в точке {x}");
-                    Debug.Assert(x != 0, "Точка разрыва: деление на 0");
-                }
-                else
-                {
-                    trace.TraceEvent(TraceEventType.Warning, 2, $"Предупреждение в таблице: окрестность 0, x = {x}");
-                }
-
-                Console.WriteLine($"x={x}: разрыв");
-                points.Add(new Point(x, double.NaN, true));
-                continue;
-            }
-
-            double y = 1.0 / x;
-            Debug.WriteLine($"x={x}, f={y}");
-            trace.TraceEvent(TraceEventType.Verbose, 3, $"Точка построена: x={x}, f={y}");
-            points.Add(new Point(x, y, false));
-        }
-
-        stopwatch.Stop();
-        Console.WriteLine($"\nТаблица построена за {stopwatch.ElapsedMilliseconds} мс.");
-
-        Console.WriteLine("\nСводная таблица:");
+        Console.WriteLine($"Таблица построена за {timer.ElapsedMilliseconds} мс");
         foreach (var p in points)
         {
             string yStr = p.IsDiscontinuous ? "разрыв" : p.Y.ToString("F4");
             Console.WriteLine($"x = {p.X,8:F4} | f(x) = {yStr}");
         }
+    }
+
+    // Считает 1/x; в точке разрыва возвращает NaN
+    static double F(double x)
+    {
+        Debug.Assert(x != 0, "Точка разрыва: деление на 0");
+
+        if (Math.Abs(x) < Epsilon)
+        {
+            if (Debugger.IsAttached) Debugger.Break();
+            var level = x == 0 ? TraceEventType.Error : TraceEventType.Warning;
+            trace.TraceEvent(level, 1, $"Разрыв: x = {x}");
+            return double.NaN;
+        }
+
+        double y = 1.0 / x;
+        Debug.WriteLine($"x={x}, f={y}");
+        trace.TraceEvent(TraceEventType.Verbose, 2, $"x={x}, f={y}");
+        return y;
     }
 }
