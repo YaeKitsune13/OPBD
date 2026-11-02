@@ -57,7 +57,6 @@ class ProgramHyperbola
         }
     }
 
-    // Считает 1/x; в точке разрыва возвращает NaN
     static double F(double x)
     {
         Debug.Assert(x != 0, "Точка разрыва: деление на 0");
