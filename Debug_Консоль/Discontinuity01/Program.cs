@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-// Требование: [DebuggerDisplay] над классом Point
 [DebuggerDisplay("x={X}, f(x)={Y}, разрыв={IsDiscontinuous}")]
 class Point
 {
@@ -20,14 +19,12 @@ class Point
 
 class ProgramHyperbola
 {
-    // Требование: TraceSource("Hyperbola")
     private static TraceSource trace = new TraceSource("Hyperbola");
 
     static void Main(string[] args)
     {
         Console.WriteLine("=== Программа: Гипербола f(x) = 1/x ===");
 
-        // 1. Одиночное вычисление
         Console.Write("Введите x для расчета f(x): ");
         if (double.TryParse(Console.ReadLine(), out double x))
         {
@@ -38,7 +35,6 @@ class ProgramHyperbola
             Console.WriteLine("Вы ввели не число.");
         }
 
-        // 2. Построение таблицы на интервале [a, b] с шагом h
         Console.WriteLine("\n--- Построение таблицы значений ---");
         Console.Write("Введите начало интервала (a): ");
         double.TryParse(Console.ReadLine(), out double a);
@@ -62,10 +58,8 @@ class ProgramHyperbola
     {
         const double epsilon = 1e-6;
 
-        // Требование: Debug.Assert(x != 0, ...)
         Debug.Assert(x != 0, "Точка разрыва: деление на 0");
 
-        // Требование: Debugger.Break() при |x| < 1e-9, если отладчик подключен
         if (Math.Abs(x) < 1e-9 && Debugger.IsAttached)
         {
             Debugger.Break();
@@ -93,7 +87,6 @@ class ProgramHyperbola
 
     static void BuildTable(double a, double b, double h)
     {
-        // Требование: Stopwatch для замера построения таблицы
         var stopwatch = new Stopwatch();
         var points = new List<Point>();
         const double epsilon = 1e-6;
@@ -102,7 +95,6 @@ class ProgramHyperbola
 
         for (double x = a; x <= b; x += h)
         {
-            // Избегаем проблем с плавающей точкой, если попали ровно в 0
             if (Math.Abs(x) < 1e-12) x = 0;
 
             bool isDiscontinuous = Math.Abs(x) < epsilon;
@@ -112,7 +104,6 @@ class ProgramHyperbola
                 if (x == 0)
                 {
                     trace.TraceEvent(TraceEventType.Error, 1, $"Ошибка в таблице: x = 0 в точке {x}");
-                    // В режиме Debug здесь сработает Assert при точном попадании в 0
                     Debug.Assert(x != 0, "Точка разрыва: деление на 0");
                 }
                 else
@@ -126,7 +117,6 @@ class ProgramHyperbola
             }
 
             double y = 1.0 / x;
-            // Требование: Debug.WriteLine($"x={x}, f={y}")
             Debug.WriteLine($"x={x}, f={y}");
             trace.TraceEvent(TraceEventType.Verbose, 3, $"Точка построена: x={x}, f={y}");
             points.Add(new Point(x, y, false));
@@ -135,7 +125,6 @@ class ProgramHyperbola
         stopwatch.Stop();
         Console.WriteLine($"\nТаблица построена за {stopwatch.ElapsedMilliseconds} мс.");
 
-        // Вывод итоговой таблицы на экран
         Console.WriteLine("\nСводная таблица:");
         foreach (var p in points)
         {
