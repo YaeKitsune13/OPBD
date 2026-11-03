@@ -1,9 +1,35 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:local="using:Исключительные"
         x:Class="Исключительные.MainWindow"
-        Title="Исключительные">
-    Welcome to Avalonia!
+        Title="Вариант 3 — Импорт CSV"
+        Width="700" Height="450"
+        WindowStartupLocation="CenterScreen" Background="#505050">
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Панель действий -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="10">
+            <Button Name="BtnOpenCsv" Content="Открыть CSV" Click="BtnOpenCsv_Click" />
+            <Button Name="BtnExport" Content="Экспорт отчёта" Click="BtnExport_Click" />
+            <ProgressBar Name="ProgressBarImport" Width="150" Height="20"
+                         IsIndeterminate="True" IsVisible="False" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Таблица товаров -->
+        <DataGrid Grid.Row="1" Name="DataGridProducts"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  GridLinesVisibility="All"
+                  Margin="10,0,10,10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Название" Binding="{Binding Name}" x:DataType="local:Product" Width="*" />
+                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" x:DataType="local:Product" Width="120" />
+                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" x:DataType="local:Product" Width="120" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Статусная строка -->
+        <Border Grid.Row="2" Background="#F0F0F0" Padding="8,4">
+            <TextBlock Name="TxtStatus" Text="Готов к работе" FontSize="12" Foreground="Black" />
+        </Border>
+    </Grid>
 </Window>
