@@ -31,7 +31,6 @@ class Program
         Debug.Assert(Math.Abs(x) <= 2 * Math.PI, "x вне разумного диапазона");
         Debug.Assert(epsilon > 0 && epsilon < 1, "epsilon вне разумного диапазона");
 
-        // Вложенная функция: факториал (в Debug-логе с отступом)
         double Factorial(int k)
         {
             Debug.Indent();
@@ -67,9 +66,9 @@ class Program
         timer.Stop();
 
         double real = Math.Sin(x);
-        Console.WriteLine($"Ряд Тейлора: {r.Sum}");
-        Console.WriteLine($"Math.Sin:    {real}");
-        Console.WriteLine($"Разница:     {Math.Abs(r.Sum - real)}");
-        Console.WriteLine($"Итераций: {r.Iterations}, время: {timer.ElapsedMilliseconds} мс");
+        Console.WriteLine($"Ряд Тейлора {r.Sum}");
+        Console.WriteLine($"Math.Sin {real}");
+        Console.WriteLine($"Разница {Math.Abs(r.Sum - real)}");
+        Console.WriteLine($"Итераций {r.Iterations}, время: {timer.ElapsedMilliseconds} мс");
     }
 }
